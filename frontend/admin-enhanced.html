@@ -357,22 +357,23 @@
                                class="search-input" 
                                placeholder="Search doctors...">
                         <select id="filterSpecialty" class="filter-select">
-                            <option value="">All Specialties</option>
-                            <option value="primary-care">Primary Care</option>
-                            <option value="cardiology">Cardiology</option>
-                            <option value="dermatology">Dermatology</option>
-                            <option value="endocrinology">Endocrinology</option>
-                            <option value="ent">ENT</option>
-                            <option value="nephrology">Nephrology</option>
-                            <option value="neurology">Neurology</option>
-                            <option value="obgyn">OB/GYN</option>
-                            <option value="ophthalmology">Ophthalmology</option>
-                            <option value="orthopedics">Orthopedics</option>
-                            <option value="pediatrics">Pediatrics</option>
-                            <option value="psychiatry">Psychiatry</option>
-                            <option value="pulmonology">Pulmonology</option>
-                            <option value="rheumatology">Rheumatology</option>
-                        </select>
+    <option value="">All Specialties</option>
+    <option value="primary-care">Primary Care</option>
+    <option value="cardiology">Cardiology</option>
+    <option value="dermatology">Dermatology</option>
+    <option value="endocrinology">Endocrinology</option>
+    <option value="ent">ENT</option>
+    <option value="nephrology">Nephrology</option>
+    <option value="neurology">Neurology</option>
+    <option value="obgyn">OB/GYN</option>
+    <option value="ophthalmology">Ophthalmology</option>
+    <option value="orthopedics">Orthopedics</option>
+    <option value="pediatrics">Pediatrics</option>
+    <option value="psychiatry">Psychiatry</option>
+    <option value="pulmonology">Pulmonology</option>
+    <option value="rheumatology">Rheumatology</option>
+    <option value="custom" disabled style="color: #999;">──────────</option>
+</select>
                     </div>
                 </div>
                 <table>
@@ -408,25 +409,31 @@
                    required>
         </div>
         <div class="form-group">
-            <label class="form-label">Specialty *</label>
-            <select id="newSpecialty" class="form-input" required>
-                <option value="">Select Specialty</option>
-                <option value="primary-care">Primary Care</option>
-                <option value="cardiology">Cardiology</option>
-                <option value="dermatology">Dermatology</option>
-                <option value="endocrinology">Endocrinology</option>
-                <option value="ent">ENT</option>
-                <option value="nephrology">Nephrology</option>
-                <option value="neurology">Neurology</option>
-                <option value="obgyn">OB/GYN</option>
-                <option value="ophthalmology">Ophthalmology</option>
-                <option value="orthopedics">Orthopedics</option>
-                <option value="pediatrics">Pediatrics</option>
-                <option value="psychiatry">Psychiatry</option>
-                <option value="pulmonology">Pulmonology</option>
-                <option value="rheumatology">Rheumatology</option>
-            </select>
-        </div>
+    <label class="form-label">Specialty *</label>
+    <select id="newSpecialty" class="form-input" required onchange="checkCustomSpecialty()">
+        <option value="">Select Specialty</option>
+        <option value="primary-care">Primary Care</option>
+        <option value="cardiology">Cardiology</option>
+        <option value="dermatology">Dermatology</option>
+        <option value="endocrinology">Endocrinology</option>
+        <option value="ent">ENT</option>
+        <option value="nephrology">Nephrology</option>
+        <option value="neurology">Neurology</option>
+        <option value="obgyn">OB/GYN</option>
+        <option value="ophthalmology">Ophthalmology</option>
+        <option value="orthopedics">Orthopedics</option>
+        <option value="pediatrics">Pediatrics</option>
+        <option value="psychiatry">Psychiatry</option>
+        <option value="pulmonology">Pulmonology</option>
+        <option value="rheumatology">Rheumatology</option>
+        <option value="custom">➕ Add Custom Specialty...</option>
+    </select>
+    <input type="text" 
+           id="customSpecialty" 
+           class="form-input" 
+           placeholder="Enter specialty name (e.g., gastroenterology)"
+           style="display: none; margin-top: 0.5rem;">
+</div>
         <div class="form-group">
             <label class="form-label">Phone *</label>
             <input type="tel" 
@@ -568,12 +575,84 @@
         let currentTab = 'manage';
         
         // Initialize
-        document.addEventListener('DOMContentLoaded', () => {
-            loadDoctors();
-            setupEventListeners();
-            setMinDate();
+document.addEventListener('DOMContentLoaded', () => {
+    loadCustomSpecialties();  // Add this line
+    loadDoctors();
+    setupEventListeners();
+    setMinDate();
+});
+        // Handle custom specialty selection
+function checkCustomSpecialty() {
+    const specialtySelect = document.getElementById('newSpecialty');
+    const customSpecialtyInput = document.getElementById('customSpecialty');
+    
+    if (specialtySelect.value === 'custom') {
+        customSpecialtyInput.style.display = 'block';
+        customSpecialtyInput.required = true;
+        // Focus on the custom input
+        customSpecialtyInput.focus();
+    } else {
+        customSpecialtyInput.style.display = 'none';
+        customSpecialtyInput.required = false;
+        customSpecialtyInput.value = '';
+    }
+}
+
+// Get the actual specialty value (handles custom)
+function getSpecialtyValue() {
+    const specialtySelect = document.getElementById('newSpecialty');
+    const customSpecialtyInput = document.getElementById('customSpecialty');
+    
+    if (specialtySelect.value === 'custom') {
+        // Convert to lowercase with hyphens (like other specialties)
+        return customSpecialtyInput.value.toLowerCase().replace(/\s+/g, '-');
+    }
+    return specialtySelect.value;
+}
+
+// Store custom specialties locally
+let customSpecialties = JSON.parse(localStorage.getItem('customSpecialties') || '[]');
+
+// Add custom specialty to all dropdowns
+function addCustomSpecialtyToDropdowns(specialty, displayName) {
+    // Add to localStorage
+    if (!customSpecialties.find(s => s.value === specialty)) {
+        customSpecialties.push({ value: specialty, display: displayName });
+        localStorage.setItem('customSpecialties', JSON.stringify(customSpecialties));
+    }
+    
+    // Add to all specialty dropdowns on the page
+    const dropdowns = ['newSpecialty', 'filterSpecialty'];
+    dropdowns.forEach(dropdownId => {
+        const select = document.getElementById(dropdownId);
+        if (select && !Array.from(select.options).find(opt => opt.value === specialty)) {
+            // Add before the "custom" option
+            const customOption = Array.from(select.options).find(opt => opt.value === 'custom');
+            const newOption = new Option(displayName, specialty);
+            select.insertBefore(newOption, customOption);
+        }
+    });
+}
+
+// Load custom specialties on page load
+function loadCustomSpecialties() {
+    customSpecialties.forEach(spec => {
+        const dropdowns = ['newSpecialty', 'filterSpecialty'];
+        dropdowns.forEach(dropdownId => {
+            const select = document.getElementById(dropdownId);
+            if (select) {
+                const customOption = Array.from(select.options).find(opt => opt.value === 'custom');
+                const newOption = new Option(spec.display, spec.value);
+                if (customOption) {
+                    select.insertBefore(newOption, customOption);
+                } else {
+                    select.appendChild(newOption);
+                }
+            }
         });
-        
+    });
+}
+
         // Set minimum date for date inputs
         function setMinDate() {
             const today = new Date().toISOString().split('T')[0];
@@ -759,64 +838,80 @@ async function deleteDoctor(doctorId, doctorName) {
 window.deleteDoctor = deleteDoctor;
 
         // Add new doctor
-        async function addNewDoctor() {
-            const formData = {
-    name: document.getElementById('newName').value,
-    specialty: document.getElementById('newSpecialty').value,
-    practice: document.getElementById('newPractice').value,  // ADD THIS LINE
-    phone: document.getElementById('newPhone').value,
-    address: document.getElementById('newAddress').value,
-    city: document.getElementById('newCity').value,
-    zip_code: document.getElementById('newZip').value
-};
+       async function addNewDoctor() {
+    // Get the specialty value (handles custom)
+    const specialtyValue = getSpecialtyValue();
+    const customSpecialtyInput = document.getElementById('customSpecialty');
+    
+    // If custom, save it for future use
+    if (document.getElementById('newSpecialty').value === 'custom' && customSpecialtyInput.value) {
+        const displayName = customSpecialtyInput.value
+            .split('-')
+            .map(word => word.charAt(0).toUpperCase() + word.slice(1))
+            .join(' ');
+        addCustomSpecialtyToDropdowns(specialtyValue, displayName);
+    }
+    
+    const formData = {
+        name: document.getElementById('newName').value,
+        specialty: specialtyValue,
+        practice: document.getElementById('newPractice').value,
+        phone: document.getElementById('newPhone').value,
+        address: document.getElementById('newAddress').value,
+        city: document.getElementById('newCity').value,
+        zip_code: document.getElementById('newZip').value
+    };
+    
+    showLoading();
+    
+    try {
+        // Add doctor
+        const doctorResponse = await fetch(`${API_URL}/doctors`, {
+            method: 'POST',
+            headers: {
+                'Content-Type': 'application/json',
+            },
+            body: JSON.stringify(formData)
+        });
+        
+        if (!doctorResponse.ok) throw new Error('Failed to add doctor');
+        
+        const newDoctor = await doctorResponse.json();
+        
+        // Add initial appointment
+        const appointmentResponse = await fetch(`${API_URL}/appointments`, {
+            method: 'POST',
+            headers: {
+                'Content-Type': 'application/json',
+            },
+            body: JSON.stringify({
+                doctor_id: newDoctor.id,
+                next_available: document.getElementById('newNextAvailable').value
+            })
+        });
+        
+        if (appointmentResponse.ok) {
+            document.getElementById('addDoctorMessage').textContent = '✓ Doctor added successfully!';
+            document.getElementById('addDoctorForm').reset();
             
-            showLoading();
+            // Hide custom specialty input after reset
+            document.getElementById('customSpecialty').style.display = 'none';
             
-            try {
-                // Add doctor
-                const doctorResponse = await fetch(`${API_URL}/doctors`, {
-                    method: 'POST',
-                    headers: {
-                        'Content-Type': 'application/json',
-                    },
-                    body: JSON.stringify(formData)
-                });
-                
-                if (!doctorResponse.ok) throw new Error('Failed to add doctor');
-                
-                const newDoctor = await doctorResponse.json();
-                
-                // Add initial appointment
-                const appointmentResponse = await fetch(`${API_URL}/appointments`, {
-                    method: 'POST',
-                    headers: {
-                        'Content-Type': 'application/json',
-                    },
-                    body: JSON.stringify({
-                        doctor_id: newDoctor.id,
-                        next_available: document.getElementById('newNextAvailable').value
-                    })
-                });
-                
-                if (appointmentResponse.ok) {
-                    document.getElementById('addDoctorMessage').textContent = '✓ Doctor added successfully!';
-                    document.getElementById('addDoctorForm').reset();
-                    
-                    // Reload doctors
-                    await loadDoctors();
-                    
-                    setTimeout(() => {
-                        document.getElementById('addDoctorMessage').textContent = '';
-                        switchTab('manage');
-                    }, 2000);
-                }
-            } catch (error) {
-                console.error('Error adding doctor:', error);
-                alert('Error adding doctor. Please try again.');
-            } finally {
-                hideLoading();
-            }
+            // Reload doctors
+            await loadDoctors();
+            
+            setTimeout(() => {
+                document.getElementById('addDoctorMessage').textContent = '';
+                switchTab('manage');
+            }, 2000);
         }
+    } catch (error) {
+        console.error('Error adding doctor:', error);
+        alert('Error adding doctor. Please try again.');
+    } finally {
+        hideLoading();
+    }
+}
         
         // Load bulk update list
         function loadBulkUpdateList() {
@@ -901,25 +996,41 @@ window.deleteDoctor = deleteDoctor;
         }
         
         // Format specialty
-        function formatSpecialty(specialty) {
-            const specialtyMap = {
-                'primary-care': 'Primary Care',
-                'cardiology': 'Cardiology',
-                'dermatology': 'Dermatology',
-                'endocrinology': 'Endocrinology',
-                'ent': 'ENT',
-                'nephrology': 'Nephrology',
-                'neurology': 'Neurology',
-                'obgyn': 'OB/GYN',
-                'ophthalmology': 'Ophthalmology',
-                'orthopedics': 'Orthopedics',
-                'pediatrics': 'Pediatrics',
-                'psychiatry': 'Psychiatry',
-                'pulmonology': 'Pulmonology',
-                'rheumatology': 'Rheumatology'
-            };
-            return specialtyMap[specialty] || specialty;
-        }
+       function formatSpecialty(specialty) {
+    const specialtyMap = {
+        'primary-care': 'Primary Care',
+        'cardiology': 'Cardiology',
+        'dermatology': 'Dermatology',
+        'endocrinology': 'Endocrinology',
+        'ent': 'ENT',
+        'nephrology': 'Nephrology',
+        'neurology': 'Neurology',
+        'obgyn': 'OB/GYN',
+        'ophthalmology': 'Ophthalmology',
+        'orthopedics': 'Orthopedics',
+        'pediatrics': 'Pediatrics',
+        'psychiatry': 'Psychiatry',
+        'pulmonology': 'Pulmonology',
+        'rheumatology': 'Rheumatology'
+    };
+    
+    // Check if it's a known specialty
+    if (specialtyMap[specialty]) {
+        return specialtyMap[specialty];
+    }
+    
+    // Check custom specialties
+    const customSpec = customSpecialties.find(s => s.value === specialty);
+    if (customSpec) {
+        return customSpec.display;
+    }
+    
+    // Format unknown specialties nicely
+    return specialty
+        .split('-')
+        .map(word => word.charAt(0).toUpperCase() + word.slice(1))
+        .join(' ');
+}
         
         // Loading states
         function showLoading() {
