@@ -343,6 +343,7 @@
             <button class="tab-btn active" onclick="switchTab('manage')">Manage Doctors</button>
             <button class="tab-btn" onclick="switchTab('add')">Add New Doctor</button>
             <button class="tab-btn" onclick="switchTab('bulk')">Bulk Update</button>
+            <button class="tab-btn" onclick="switchTab('import')">Import CSV</button>
         </div>
 
         <!-- Manage Doctors Tab -->
@@ -504,6 +505,54 @@
                 </button>
             </div>
         </div>
+        <!-- CSV Import Tab -->
+<div id="import-tab" class="tab-content">
+    <div class="add-doctor-form">
+        <h2 style="margin-bottom: 1.5rem;">Import Doctors from CSV</h2>
+        
+        <div style="background: #f0f9ff; border: 2px solid #0284c7; border-radius: 12px; padding: 1.5rem; margin-bottom: 2rem;">
+            <h3 style="color: #0284c7; margin-bottom: 1rem;">CSV Format Requirements</h3>
+            <p style="margin-bottom: 1rem;">Your CSV file must have these exact column headers:</p>
+            <code style="background: white; padding: 1rem; border-radius: 8px; display: block; margin-bottom: 1rem;">
+                name,specialty,practice,phone,address,city,zip_code,next_available
+            </code>
+            <p style="margin-bottom: 0.5rem;"><strong>Example rows:</strong></p>
+            <code style="background: white; padding: 1rem; border-radius: 8px; display: block; font-size: 0.875rem;">
+                Dr. John Smith MD,primary-care,Coastal Medical Group,(252) 555-0100,123 Main St,Morehead City,28557,2024-02-15<br>
+                Dr. Jane Doe MD,cardiology,Heart Specialists,(252) 555-0200,456 Oak Ave,Beaufort,28516,2024-02-20
+            </code>
+        </div>
+
+        <div style="margin-bottom: 2rem;">
+            <label class="form-label" style="display: block; margin-bottom: 0.5rem;">Select CSV File</label>
+            <input type="file" 
+                   id="csvFile" 
+                   accept=".csv"
+                   style="padding: 0.75rem; border: 2px dashed #cbd5e1; border-radius: 12px; width: 100%; cursor: pointer;">
+        </div>
+
+        <button onclick="previewCSV()" class="btn-primary" style="margin-right: 1rem;">
+            Preview Data
+        </button>
+        
+        <button onclick="importCSV()" class="btn-primary" style="background: #10b981;" id="importBtn" disabled>
+            Import All Doctors
+        </button>
+        
+        <div id="importMessage" style="margin-top: 1rem; font-weight: 600;"></div>
+
+        <!-- Preview Table -->
+        <div id="csvPreview" style="margin-top: 2rem; display: none;">
+            <h3 style="margin-bottom: 1rem;">Preview (First 5 rows)</h3>
+            <div style="overflow-x: auto;">
+                <table style="width: 100%; font-size: 0.875rem;">
+                    <thead id="previewHead"></thead>
+                    <tbody id="previewBody"></tbody>
+                </table>
+            </div>
+        </div>
+    </div>
+</div>
     </div>
 
     <!-- Loading Overlay -->
@@ -845,6 +894,182 @@ function displayDoctors(doctors) {
         function hideLoading() {
             document.getElementById('loadingOverlay').style.display = 'none';
         }
+        // CSV Import Functions
+let csvData = [];
+
+function previewCSV() {
+    const fileInput = document.getElementById('csvFile');
+    const file = fileInput.files[0];
+    
+    if (!file) {
+        alert('Please select a CSV file');
+        return;
+    }
+    
+    const reader = new FileReader();
+    reader.onload = function(e) {
+        const text = e.target.result;
+        parseCSV(text);
+    };
+    reader.readAsText(file);
+}
+
+function parseCSV(text) {
+    // Split into lines and remove empty lines
+    const lines = text.split('\n').filter(line => line.trim());
+    
+    if (lines.length < 2) {
+        alert('CSV file appears to be empty');
+        return;
+    }
+    
+    // Get headers
+    const headers = lines[0].split(',').map(h => h.trim().toLowerCase());
+    
+    // Validate headers
+    const requiredHeaders = ['name', 'specialty', 'practice', 'phone', 'address', 'city', 'zip_code', 'next_available'];
+    const missingHeaders = requiredHeaders.filter(h => !headers.includes(h));
+    
+    if (missingHeaders.length > 0) {
+        alert(`Missing required columns: ${missingHeaders.join(', ')}`);
+        return;
+    }
+    
+    // Parse data rows
+    csvData = [];
+    for (let i = 1; i < lines.length; i++) {
+        const values = lines[i].split(',').map(v => v.trim());
+        const row = {};
+        headers.forEach((header, index) => {
+            row[header] = values[index] || '';
+        });
+        
+        // Validate specialty value
+        const validSpecialties = ['primary-care', 'cardiology', 'dermatology', 'endocrinology', 
+                                 'ent', 'nephrology', 'neurology', 'obgyn', 'ophthalmology', 
+                                 'orthopedics', 'pediatrics', 'psychiatry', 'pulmonology', 'rheumatology'];
+        
+        if (!validSpecialties.includes(row.specialty)) {
+            console.warn(`Row ${i}: Invalid specialty "${row.specialty}". Must be one of: ${validSpecialties.join(', ')}`);
+        }
+        
+        csvData.push(row);
+    }
+    
+    // Show preview
+    showPreview();
+    
+    // Enable import button
+    document.getElementById('importBtn').disabled = false;
+    document.getElementById('importMessage').textContent = `Ready to import ${csvData.length} doctors`;
+    document.getElementById('importMessage').style.color = '#0284c7';
+}
+
+function showPreview() {
+    const previewDiv = document.getElementById('csvPreview');
+    const previewHead = document.getElementById('previewHead');
+    const previewBody = document.getElementById('previewBody');
+    
+    // Show preview section
+    previewDiv.style.display = 'block';
+    
+    // Create header
+    const headers = Object.keys(csvData[0]);
+    previewHead.innerHTML = '<tr>' + headers.map(h => `<th style="padding: 0.5rem; background: #f1f5f9;">${h}</th>`).join('') + '</tr>';
+    
+    // Show first 5 rows
+    const previewData = csvData.slice(0, 5);
+    previewBody.innerHTML = previewData.map(row => 
+        '<tr>' + headers.map(h => `<td style="padding: 0.5rem; border: 1px solid #e2e8f0;">${row[h]}</td>`).join('') + '</tr>'
+    ).join('');
+}
+
+async function importCSV() {
+    if (csvData.length === 0) {
+        alert('No data to import');
+        return;
+    }
+    
+    const confirmImport = confirm(`Are you sure you want to import ${csvData.length} doctors?`);
+    if (!confirmImport) return;
+    
+    showLoading();
+    let successCount = 0;
+    let errorCount = 0;
+    const errors = [];
+    
+    for (const row of csvData) {
+        try {
+            // Add doctor
+            const doctorResponse = await fetch(`${API_URL}/doctors`, {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json',
+                },
+                body: JSON.stringify({
+                    name: row.name,
+                    specialty: row.specialty,
+                    practice: row.practice,
+                    phone: row.phone,
+                    address: row.address,
+                    city: row.city,
+                    zip_code: row.zip_code
+                })
+            });
+            
+            if (!doctorResponse.ok) {
+                throw new Error(`Failed to add doctor: ${row.name}`);
+            }
+            
+            const newDoctor = await doctorResponse.json();
+            
+            // Add appointment if date provided
+            if (row.next_available) {
+                await fetch(`${API_URL}/appointments`, {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json',
+                    },
+                    body: JSON.stringify({
+                        doctor_id: newDoctor.id,
+                        next_available: row.next_available
+                    })
+                });
+            }
+            
+            successCount++;
+        } catch (error) {
+            errorCount++;
+            errors.push(`${row.name}: ${error.message}`);
+            console.error('Error importing doctor:', error);
+        }
+    }
+    
+    hideLoading();
+    
+    // Show results
+    let message = `Import complete! Successfully imported ${successCount} doctors.`;
+    if (errorCount > 0) {
+        message += ` ${errorCount} failed.`;
+        console.error('Import errors:', errors);
+    }
+    
+    document.getElementById('importMessage').textContent = message;
+    document.getElementById('importMessage').style.color = errorCount > 0 ? '#dc2626' : '#10b981';
+    
+    // Reset form
+    document.getElementById('csvFile').value = '';
+    document.getElementById('importBtn').disabled = true;
+    csvData = [];
+    
+    // Reload doctors list
+    if (successCount > 0) {
+        await loadDoctors();
+        setTimeout(() => {
+            switchTab('manage');
+        }, 2000);
+    }
+}
     </script>
 </body>
 </html>
