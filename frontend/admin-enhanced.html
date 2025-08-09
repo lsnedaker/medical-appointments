@@ -657,6 +657,9 @@ function displayDoctors(doctors) {
                 <button class="btn-small btn-update" onclick="updateAppointment(${doctor.id})">
                     Update
                 </button>
+                <button class="btn-small btn-delete" onclick="deleteDoctor(${doctor.id}, '${doctor.name.replace(/'/g, "\\'")}')">
+                    Delete
+                </button>
                 <span id="msg-${doctor.id}" class="success-msg"></span>
             </td>
         </tr>
@@ -722,7 +725,39 @@ function displayDoctors(doctors) {
                 msgSpan.style.color = 'red';
             }
         }
-        
+        // Delete doctor function
+async function deleteDoctor(doctorId, doctorName) {
+    const confirmDelete = confirm(`Are you sure you want to delete ${doctorName}? This cannot be undone.`);
+    
+    if (!confirmDelete) return;
+    
+    try {
+        const response = await fetch(`${API_URL}/doctors/${doctorId}`, {
+            method: 'DELETE',
+            headers: {
+                'Content-Type': 'application/json',
+            }
+        });
+
+        if (response.ok) {
+            alert('Doctor deleted successfully');
+            // Remove from local array
+            allDoctors = allDoctors.filter(d => d.id !== doctorId);
+            // Refresh display
+            filterDoctors();
+            updateStats();
+        } else {
+            throw new Error('Failed to delete');
+        }
+    } catch (error) {
+        console.error('Error deleting doctor:', error);
+        alert('Error deleting doctor. Please try again.');
+    }
+}
+
+// Make deleteDoctor available globally
+window.deleteDoctor = deleteDoctor;
+
         // Add new doctor
         async function addNewDoctor() {
             const formData = {

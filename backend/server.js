@@ -96,6 +96,25 @@ app.post('/api/appointments', async (req, res) => {
     res.status(500).json({ error: 'Failed to update appointment' });
   }
 });
+// Delete a doctor
+app.delete('/api/doctors/:id', async (req, res) => {
+  try {
+    const { id } = req.params;
+    
+    // Delete doctor (appointments will cascade delete due to foreign key)
+    const { error } = await supabase
+      .from('doctors')
+      .delete()
+      .eq('id', id);
+
+    if (error) throw error;
+    
+    res.json({ message: 'Doctor deleted successfully' });
+  } catch (error) {
+    console.error('Error deleting doctor:', error);
+    res.status(500).json({ error: 'Failed to delete doctor' });
+  }
+});
 
 app.listen(port, () => {
   console.log(`Server running on http://localhost:${port}`);
