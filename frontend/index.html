@@ -3,15 +3,14 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>MedAppoints - Real-Time Doctor Availability</title>
+    <title>MedAppoints - Find Your Next Doctor Appointment</title>
     <link rel="stylesheet" href="style.css">
-    <!-- Modern fonts -->
     <link rel="preconnect" href="https://fonts.googleapis.com">
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800;900&display=swap" rel="stylesheet">
 </head>
 <body>
-    <!-- Clean Navigation -->
+    <!-- Navigation -->
     <nav class="navbar">
         <div class="nav-wrapper">
             <div class="nav-brand">
@@ -20,99 +19,93 @@
             </div>
             <div class="nav-status">
                 <span class="status-dot"></span>
-                <span>Live Updates • Eastern NC</span>
+                <span id="lastUpdatedNav">Live Updates • Eastern NC</span>
             </div>
         </div>
     </nav>
 
-    <!-- Hero Section with Search -->
-    <section class="hero-section">
-        <div class="hero-content">
-            <h1 class="hero-title">
-                Find Doctor Appointments <span class="text-accent">Instantly</span>
+    <!-- Hero Section - Simplified -->
+    <section class="hero-simple">
+        <div class="hero-content-simple">
+            <h1 class="hero-title-simple">
+                Find Your Next Doctor Appointment in <span class="text-accent">Eastern NC</span>
             </h1>
-            <p class="hero-subtitle">
-                Real-time availability from 247 medical offices across Morehead City and surrounding areas
+            <p class="hero-subtitle-simple">
+                Select a specialty to see the next available appointments
             </p>
             
-            <!-- Search Bar -->
-            <div class="search-container">
-                <select id="specialtySelect" class="search-select">
-                    <option value="">All Specialties</option>
-                    <option value="primary-care">Primary Care</option>
-                    <option value="cardiology">Cardiology</option>
-                    <option value="dermatology">Dermatology</option>
-                    <option value="endocrinology">Endocrinology</option>
-                    <option value="ent">ENT</option>
-                    <option value="nephrology">Nephrology</option>
-                    <option value="neurology">Neurology</option>
-                    <option value="obgyn">OB/GYN</option>
-                    <option value="ophthalmology">Ophthalmology</option>
-                    <option value="orthopedics">Orthopedics</option>
-                    <option value="pediatrics">Pediatrics</option>
-                    <option value="psychiatry">Psychiatry</option>
-                    <option value="pulmonology">Pulmonology</option>
-                    <option value="rheumatology">Rheumatology</option>
-                </select>
-                
-                <select id="locationSelect" class="search-select">
-                    <option value="all">All Locations</option>
-                    <option value="28557">Morehead City (28557)</option>
-                    <option value="28516">Beaufort (28516)</option>
-                    <option value="28570">Newport (28570)</option>
-                    <option value="28532">Havelock (28532)</option>
-                </select>
-                
-                <button id="searchBtn" class="search-button">
-                    Search Appointments
-                </button>
+            <!-- Location Filter -->
+            <div class="location-filter">
+                <label>Filter by location:</label>
+                <div class="location-buttons">
+                    <button class="location-btn active" data-location="all">All Areas</button>
+                    <button class="location-btn" data-location="28557">Morehead City</button>
+                    <button class="location-btn" data-location="28516">Beaufort</button>
+                    <button class="location-btn" data-location="28570">Newport</button>
+                    <button class="location-btn" data-location="28532">Havelock</button>
+                </div>
             </div>
         </div>
     </section>
 
-    <!-- Filter Bar -->
-    <section class="filter-bar">
-        <div class="filter-container">
-            <span class="filter-label">Quick filters:</span>
-            <div class="filter-buttons">
-                <button class="filter-btn active" data-filter="all">All</button>
-                <button class="filter-btn" data-filter="today">Available Today</button>
-                <button class="filter-btn" data-filter="week">This Week</button>
-                <button class="filter-btn" data-filter="urgent">Urgent Care</button>
-                <button class="filter-btn" data-filter="specialist">Specialists</button>
-            </div>
-            <span class="results-count" id="resultsCount"></span>
-        </div>
-    </section>
-
-    <!-- Results Section -->
-    <main class="results-section">
-        <div class="results-container">
+    <!-- Main Content - Specialty Cards -->
+    <main class="specialty-section">
+        <div class="specialty-container">
             <!-- Loading State -->
-            <div id="loadingState" class="loading-state hidden">
+            <div id="loadingState" class="loading-state">
                 <div class="loading-spinner"></div>
-                <p>Searching appointments...</p>
+                <p>Loading appointments...</p>
             </div>
 
-            <!-- Results Grid -->
-            <div id="resultsGrid" class="results-grid"></div>
-
-            <!-- Empty State -->
-            <div id="emptyState" class="empty-state hidden">
-                <h3>No appointments found</h3>
-                <p>Try adjusting your filters or check back tomorrow for updated availability</p>
+            <!-- Specialty Grid -->
+            <div id="specialtyGrid" class="specialty-grid">
+                <!-- Specialty cards will be dynamically inserted here -->
             </div>
         </div>
     </main>
+
+    <!-- Quick Stats Bar -->
+    <section class="stats-bar">
+        <div class="stats-container">
+            <div class="stat-item">
+                <span class="stat-number" id="totalDoctors">0</span>
+                <span class="stat-label">Doctors Tracked</span>
+            </div>
+            <div class="stat-item">
+                <span class="stat-number" id="availableToday">0</span>
+                <span class="stat-label">Available Today</span>
+            </div>
+            <div class="stat-item">
+                <span class="stat-number" id="availableWeek">0</span>
+                <span class="stat-label">This Week</span>
+            </div>
+            <div class="stat-item">
+                <span class="stat-number" id="lastUpdated">--</span>
+                <span class="stat-label">Last Updated</span>
+            </div>
+        </div>
+    </section>
 
     <!-- Footer -->
     <footer class="footer">
         <div class="footer-content">
             <p>© 2024 MedAppoints • For informational purposes only</p>
             <p>AI-powered daily updates from medical offices</p>
+            <p><a href="admin-enhanced.html" style="color: white; opacity: 0.7;">Admin</a></p>
         </div>
     </footer>
 
-    <script src="script.js"></script>
+    <!-- Modal for Doctor Details -->
+    <div id="doctorModal" class="modal hidden">
+        <div class="modal-content">
+            <span class="modal-close">&times;</span>
+            <h2 id="modalSpecialty" class="modal-title"></h2>
+            <div id="modalDoctorList" class="modal-doctor-list">
+                <!-- Doctor details will be inserted here -->
+            </div>
+        </div>
+    </div>
+
+    <script src="script-specialty.js"></script>
 </body>
 </html>
