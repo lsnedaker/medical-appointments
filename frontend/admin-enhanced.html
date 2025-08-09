@@ -1,0 +1,832 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Admin Dashboard - Medical Appointments</title>
+    <link rel="stylesheet" href="style.css">
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
+    <style>
+        .admin-wrapper {
+            max-width: 1400px;
+            margin: 0 auto;
+            padding: 2rem;
+        }
+        
+        /* Dashboard Header */
+        .dashboard-header {
+            background: linear-gradient(135deg, var(--primary), var(--primary-dark));
+            color: white;
+            padding: 2rem;
+            border-radius: var(--radius-lg);
+            margin-bottom: 2rem;
+        }
+        
+        .dashboard-title {
+            font-size: 2rem;
+            font-weight: 700;
+            margin-bottom: 0.5rem;
+        }
+        
+        .dashboard-stats {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(150px, 1fr));
+            gap: 1rem;
+            margin-top: 1.5rem;
+        }
+        
+        .stat-card {
+            background: rgba(255, 255, 255, 0.1);
+            padding: 1rem;
+            border-radius: var(--radius);
+            backdrop-filter: blur(10px);
+        }
+        
+        .stat-number {
+            font-size: 2rem;
+            font-weight: 700;
+        }
+        
+        .stat-label {
+            font-size: 0.875rem;
+            opacity: 0.9;
+        }
+        
+        /* Tabs */
+        .tabs {
+            display: flex;
+            gap: 0.5rem;
+            margin-bottom: 2rem;
+            background: var(--bg-white);
+            padding: 0.5rem;
+            border-radius: var(--radius);
+            box-shadow: var(--shadow-sm);
+        }
+        
+        .tab-btn {
+            padding: 0.75rem 1.5rem;
+            background: transparent;
+            border: none;
+            border-radius: var(--radius);
+            font-weight: 500;
+            color: var(--text-secondary);
+            cursor: pointer;
+            transition: all 0.2s;
+        }
+        
+        .tab-btn.active {
+            background: var(--primary);
+            color: white;
+        }
+        
+        .tab-content {
+            display: none;
+        }
+        
+        .tab-content.active {
+            display: block;
+        }
+        
+        /* Add Doctor Form */
+        .add-doctor-form {
+            background: var(--bg-white);
+            padding: 2rem;
+            border-radius: var(--radius-lg);
+            box-shadow: var(--shadow);
+            margin-bottom: 2rem;
+        }
+        
+        .form-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(250px, 1fr));
+            gap: 1rem;
+            margin-bottom: 1rem;
+        }
+        
+        .form-group {
+            display: flex;
+            flex-direction: column;
+        }
+        
+        .form-label {
+            font-size: 0.875rem;
+            font-weight: 500;
+            color: var(--text-secondary);
+            margin-bottom: 0.25rem;
+        }
+        
+        .form-input {
+            padding: 0.75rem;
+            border: 1px solid var(--border);
+            border-radius: var(--radius);
+            font-size: 0.9375rem;
+        }
+        
+        .form-input:focus {
+            outline: none;
+            border-color: var(--primary);
+            box-shadow: 0 0 0 3px rgba(79, 70, 229, 0.1);
+        }
+        
+        .btn-primary {
+            padding: 0.875rem 2rem;
+            background: var(--primary);
+            color: white;
+            border: none;
+            border-radius: var(--radius);
+            font-weight: 600;
+            cursor: pointer;
+            transition: all 0.2s;
+        }
+        
+        .btn-primary:hover {
+            background: var(--primary-dark);
+            transform: translateY(-1px);
+        }
+        
+        /* Doctors Table */
+        .doctors-table {
+            background: var(--bg-white);
+            border-radius: var(--radius-lg);
+            overflow: hidden;
+            box-shadow: var(--shadow);
+        }
+        
+        .table-header {
+            padding: 1.5rem;
+            border-bottom: 1px solid var(--border-light);
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+        }
+        
+        .search-box {
+            display: flex;
+            gap: 0.5rem;
+            flex: 1;
+            max-width: 400px;
+        }
+        
+        .search-input {
+            flex: 1;
+            padding: 0.5rem 1rem;
+            border: 1px solid var(--border);
+            border-radius: var(--radius);
+            font-size: 0.875rem;
+        }
+        
+        .filter-select {
+            padding: 0.5rem 1rem;
+            border: 1px solid var(--border);
+            border-radius: var(--radius);
+            font-size: 0.875rem;
+            cursor: pointer;
+        }
+        
+        table {
+            width: 100%;
+            border-collapse: collapse;
+        }
+        
+        thead {
+            background: var(--bg-light);
+            border-bottom: 1px solid var(--border);
+        }
+        
+        th {
+            padding: 0.75rem 1rem;
+            text-align: left;
+            font-size: 0.75rem;
+            font-weight: 600;
+            color: var(--text-secondary);
+            text-transform: uppercase;
+            letter-spacing: 0.05em;
+        }
+        
+        td {
+            padding: 1rem;
+            border-bottom: 1px solid var(--border-light);
+            font-size: 0.875rem;
+        }
+        
+        tbody tr:hover {
+            background: var(--bg-light);
+        }
+        
+        .doctor-name {
+            font-weight: 600;
+            color: var(--text-primary);
+        }
+        
+        .specialty-badge {
+            display: inline-block;
+            padding: 0.25rem 0.5rem;
+            background: var(--bg-accent);
+            color: var(--primary);
+            border-radius: 6px;
+            font-size: 0.75rem;
+            font-weight: 500;
+        }
+        
+        .date-input-small {
+            padding: 0.375rem 0.5rem;
+            border: 1px solid var(--border);
+            border-radius: 6px;
+            font-size: 0.8125rem;
+        }
+        
+        .btn-small {
+            padding: 0.375rem 0.75rem;
+            font-size: 0.8125rem;
+            border: none;
+            border-radius: 6px;
+            cursor: pointer;
+            font-weight: 500;
+            transition: all 0.2s;
+        }
+        
+        .btn-update {
+            background: var(--success);
+            color: white;
+        }
+        
+        .btn-update:hover {
+            background: #059669;
+        }
+        
+        .btn-delete {
+            background: #ef4444;
+            color: white;
+            margin-left: 0.25rem;
+        }
+        
+        .btn-delete:hover {
+            background: #dc2626;
+        }
+        
+        .success-msg {
+            color: var(--success);
+            font-size: 0.75rem;
+            margin-left: 0.5rem;
+        }
+        
+        .loading-overlay {
+            position: fixed;
+            top: 0;
+            left: 0;
+            right: 0;
+            bottom: 0;
+            background: rgba(0, 0, 0, 0.5);
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            z-index: 1000;
+        }
+        
+        .loading-spinner {
+            width: 50px;
+            height: 50px;
+            border: 4px solid white;
+            border-top-color: var(--primary);
+            border-radius: 50%;
+            animation: spin 1s linear infinite;
+        }
+        
+        @keyframes spin {
+            to { transform: rotate(360deg); }
+        }
+    </style>
+</head>
+<body>
+    <!-- Navigation -->
+    <nav class="navbar">
+        <div class="nav-wrapper">
+            <div class="nav-brand">
+                <span class="brand-text">MedAppoints Admin</span>
+                <span class="brand-badge">Dashboard</span>
+            </div>
+            <div>
+                <a href="index.html" style="color: var(--primary); text-decoration: none; font-weight: 500;">
+                    ← Back to Main Site
+                </a>
+            </div>
+        </div>
+    </nav>
+
+    <div class="admin-wrapper">
+        <!-- Dashboard Header -->
+        <div class="dashboard-header">
+            <h1 class="dashboard-title">Admin Dashboard</h1>
+            <p>Manage doctors and appointment availability</p>
+            <div class="dashboard-stats">
+                <div class="stat-card">
+                    <div class="stat-number" id="totalDoctors">0</div>
+                    <div class="stat-label">Total Doctors</div>
+                </div>
+                <div class="stat-card">
+                    <div class="stat-number" id="todayAvailable">0</div>
+                    <div class="stat-label">Available Today</div>
+                </div>
+                <div class="stat-card">
+                    <div class="stat-number" id="weekAvailable">0</div>
+                    <div class="stat-label">This Week</div>
+                </div>
+                <div class="stat-card">
+                    <div class="stat-number" id="lastUpdated">--</div>
+                    <div class="stat-label">Last Update</div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Tabs -->
+        <div class="tabs">
+            <button class="tab-btn active" onclick="switchTab('manage')">Manage Doctors</button>
+            <button class="tab-btn" onclick="switchTab('add')">Add New Doctor</button>
+            <button class="tab-btn" onclick="switchTab('bulk')">Bulk Update</button>
+        </div>
+
+        <!-- Manage Doctors Tab -->
+        <div id="manage-tab" class="tab-content active">
+            <div class="doctors-table">
+                <div class="table-header">
+                    <h2 style="font-size: 1.25rem; font-weight: 600;">All Doctors</h2>
+                    <div class="search-box">
+                        <input type="text" 
+                               id="searchInput" 
+                               class="search-input" 
+                               placeholder="Search doctors...">
+                        <select id="filterSpecialty" class="filter-select">
+                            <option value="">All Specialties</option>
+                            <option value="primary-care">Primary Care</option>
+                            <option value="cardiology">Cardiology</option>
+                            <option value="dermatology">Dermatology</option>
+                            <option value="endocrinology">Endocrinology</option>
+                            <option value="ent">ENT</option>
+                            <option value="nephrology">Nephrology</option>
+                            <option value="neurology">Neurology</option>
+                            <option value="obgyn">OB/GYN</option>
+                            <option value="ophthalmology">Ophthalmology</option>
+                            <option value="orthopedics">Orthopedics</option>
+                            <option value="pediatrics">Pediatrics</option>
+                            <option value="psychiatry">Psychiatry</option>
+                            <option value="pulmonology">Pulmonology</option>
+                            <option value="rheumatology">Rheumatology</option>
+                        </select>
+                    </div>
+                </div>
+                <table>
+                    <thead>
+                        <tr>
+                            <th>Doctor Name</th>
+                            <th>Specialty</th>
+                            <th>Location</th>
+                            <th>Phone</th>
+                            <th>Next Available</th>
+                            <th>Actions</th>
+                        </tr>
+                    </thead>
+                    <tbody id="doctorsTableBody">
+                        <!-- Doctors will be loaded here -->
+                    </tbody>
+                </table>
+            </div>
+        </div>
+
+        <!-- Add Doctor Tab -->
+        <div id="add-tab" class="tab-content">
+            <div class="add-doctor-form">
+                <h2 style="margin-bottom: 1.5rem;">Add New Doctor</h2>
+                <form id="addDoctorForm">
+                    <div class="form-grid">
+                        <div class="form-group">
+                            <label class="form-label">Doctor Name *</label>
+                            <input type="text" 
+                                   id="newName" 
+                                   class="form-input" 
+                                   placeholder="Dr. John Smith, MD"
+                                   required>
+                        </div>
+                        <div class="form-group">
+                            <label class="form-label">Specialty *</label>
+                            <select id="newSpecialty" class="form-input" required>
+                                <option value="">Select Specialty</option>
+                                <option value="primary-care">Primary Care</option>
+                                <option value="cardiology">Cardiology</option>
+                                <option value="dermatology">Dermatology</option>
+                                <option value="endocrinology">Endocrinology</option>
+                                <option value="ent">ENT</option>
+                                <option value="nephrology">Nephrology</option>
+                                <option value="neurology">Neurology</option>
+                                <option value="obgyn">OB/GYN</option>
+                                <option value="ophthalmology">Ophthalmology</option>
+                                <option value="orthopedics">Orthopedics</option>
+                                <option value="pediatrics">Pediatrics</option>
+                                <option value="psychiatry">Psychiatry</option>
+                                <option value="pulmonology">Pulmonology</option>
+                                <option value="rheumatology">Rheumatology</option>
+                            </select>
+                        </div>
+                        <div class="form-group">
+                            <label class="form-label">Phone *</label>
+                            <input type="tel" 
+                                   id="newPhone" 
+                                   class="form-input" 
+                                   placeholder="(252) 555-0100"
+                                   required>
+                        </div>
+                        <div class="form-group">
+                            <label class="form-label">Address *</label>
+                            <input type="text" 
+                                   id="newAddress" 
+                                   class="form-input" 
+                                   placeholder="123 Medical Center Dr"
+                                   required>
+                        </div>
+                        <div class="form-group">
+                            <label class="form-label">City *</label>
+                            <select id="newCity" class="form-input" required>
+                                <option value="">Select City</option>
+                                <option value="Morehead City">Morehead City</option>
+                                <option value="Beaufort">Beaufort</option>
+                                <option value="Newport">Newport</option>
+                                <option value="Havelock">Havelock</option>
+                            </select>
+                        </div>
+                        <div class="form-group">
+                            <label class="form-label">Zip Code *</label>
+                            <select id="newZip" class="form-input" required>
+                                <option value="">Select Zip</option>
+                                <option value="28557">28557 - Morehead City</option>
+                                <option value="28516">28516 - Beaufort</option>
+                                <option value="28570">28570 - Newport</option>
+                                <option value="28532">28532 - Havelock</option>
+                            </select>
+                        </div>
+                        <div class="form-group">
+                            <label class="form-label">First Available Appointment *</label>
+                            <input type="date" 
+                                   id="newNextAvailable" 
+                                   class="form-input"
+                                   min=""
+                                   required>
+                        </div>
+                    </div>
+                    <button type="submit" class="btn-primary">Add Doctor</button>
+                    <span id="addDoctorMessage" style="margin-left: 1rem; color: var(--success);"></span>
+                </form>
+            </div>
+        </div>
+
+        <!-- Bulk Update Tab -->
+        <div id="bulk-tab" class="tab-content">
+            <div class="add-doctor-form">
+                <h2 style="margin-bottom: 1.5rem;">Bulk Update Appointments</h2>
+                <p style="color: var(--text-secondary); margin-bottom: 1.5rem;">
+                    Update all appointments at once by calling each office
+                </p>
+                <div id="bulkUpdateList">
+                    <!-- Bulk update list will be loaded here -->
+                </div>
+                <button onclick="saveAllUpdates()" class="btn-primary" style="margin-top: 1rem;">
+                    Save All Updates
+                </button>
+            </div>
+        </div>
+    </div>
+
+    <!-- Loading Overlay -->
+    <div id="loadingOverlay" class="loading-overlay" style="display: none;">
+        <div class="loading-spinner"></div>
+    </div>
+
+    <script>
+        // Update with your backend URL
+        const API_URL = 'https://medical-appointments-api-n3yu.onrender.com/api';
+        
+        let allDoctors = [];
+        let currentTab = 'manage';
+        
+        // Initialize
+        document.addEventListener('DOMContentLoaded', () => {
+            loadDoctors();
+            setupEventListeners();
+            setMinDate();
+        });
+        
+        // Set minimum date for date inputs
+        function setMinDate() {
+            const today = new Date().toISOString().split('T')[0];
+            document.getElementById('newNextAvailable').min = today;
+        }
+        
+        // Setup event listeners
+        function setupEventListeners() {
+            // Search functionality
+            document.getElementById('searchInput').addEventListener('input', filterDoctors);
+            document.getElementById('filterSpecialty').addEventListener('change', filterDoctors);
+            
+            // Add doctor form
+            document.getElementById('addDoctorForm').addEventListener('submit', async (e) => {
+                e.preventDefault();
+                await addNewDoctor();
+            });
+        }
+        
+        // Switch tabs
+        function switchTab(tab) {
+            currentTab = tab;
+            
+            // Update tab buttons
+            document.querySelectorAll('.tab-btn').forEach(btn => {
+                btn.classList.remove('active');
+            });
+            event.target.classList.add('active');
+            
+            // Update tab content
+            document.querySelectorAll('.tab-content').forEach(content => {
+                content.classList.remove('active');
+            });
+            document.getElementById(`${tab}-tab`).classList.add('active');
+            
+            // Load bulk update list if needed
+            if (tab === 'bulk') {
+                loadBulkUpdateList();
+            }
+        }
+        
+        // Load all doctors
+        async function loadDoctors() {
+            showLoading();
+            try {
+                const response = await fetch(`${API_URL}/appointments`);
+                allDoctors = await response.json();
+                
+                displayDoctors(allDoctors);
+                updateStats();
+                hideLoading();
+            } catch (error) {
+                console.error('Error loading doctors:', error);
+                hideLoading();
+            }
+        }
+        
+        // Display doctors in table
+        function displayDoctors(doctors) {
+            const tbody = document.getElementById('doctorsTableBody');
+            
+            tbody.innerHTML = doctors.map(doctor => `
+                <tr>
+                    <td class="doctor-name">${doctor.name}</td>
+                    <td><span class="specialty-badge">${formatSpecialty(doctor.specialty)}</span></td>
+                    <td>${doctor.city}, NC ${doctor.zip_code}</td>
+                    <td>${doctor.phone}</td>
+                    <td>
+                        <input type="date" 
+                               class="date-input-small" 
+                               id="date-${doctor.id}"
+                               value="${doctor.next_available.split('T')[0]}"
+                               min="${new Date().toISOString().split('T')[0]}">
+                    </td>
+                    <td>
+                        <button class="btn-small btn-update" onclick="updateAppointment(${doctor.id})">
+                            Update
+                        </button>
+                        <span id="msg-${doctor.id}" class="success-msg"></span>
+                    </td>
+                </tr>
+            `).join('');
+        }
+        
+        // Filter doctors
+        function filterDoctors() {
+            const searchTerm = document.getElementById('searchInput').value.toLowerCase();
+            const specialty = document.getElementById('filterSpecialty').value;
+            
+            let filtered = allDoctors;
+            
+            if (searchTerm) {
+                filtered = filtered.filter(doctor => 
+                    doctor.name.toLowerCase().includes(searchTerm) ||
+                    doctor.city.toLowerCase().includes(searchTerm) ||
+                    doctor.phone.includes(searchTerm)
+                );
+            }
+            
+            if (specialty) {
+                filtered = filtered.filter(doctor => doctor.specialty === specialty);
+            }
+            
+            displayDoctors(filtered);
+        }
+        
+        // Update appointment
+        async function updateAppointment(doctorId) {
+            const dateInput = document.getElementById(`date-${doctorId}`);
+            const msgSpan = document.getElementById(`msg-${doctorId}`);
+            
+            try {
+                const response = await fetch(`${API_URL}/appointments`, {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json',
+                    },
+                    body: JSON.stringify({
+                        doctor_id: doctorId,
+                        next_available: dateInput.value
+                    })
+                });
+
+                if (response.ok) {
+                    msgSpan.textContent = '✓ Updated';
+                    setTimeout(() => {
+                        msgSpan.textContent = '';
+                    }, 3000);
+                    
+                    // Update local data
+                    const doctor = allDoctors.find(d => d.id === doctorId);
+                    if (doctor) {
+                        doctor.next_available = dateInput.value;
+                        doctor.last_checked = new Date().toISOString();
+                    }
+                    updateStats();
+                }
+            } catch (error) {
+                console.error('Error updating appointment:', error);
+                msgSpan.textContent = 'Error';
+                msgSpan.style.color = 'red';
+            }
+        }
+        
+        // Add new doctor
+        async function addNewDoctor() {
+            const formData = {
+                name: document.getElementById('newName').value,
+                specialty: document.getElementById('newSpecialty').value,
+                phone: document.getElementById('newPhone').value,
+                address: document.getElementById('newAddress').value,
+                city: document.getElementById('newCity').value,
+                zip_code: document.getElementById('newZip').value
+            };
+            
+            showLoading();
+            
+            try {
+                // Add doctor
+                const doctorResponse = await fetch(`${API_URL}/doctors`, {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json',
+                    },
+                    body: JSON.stringify(formData)
+                });
+                
+                if (!doctorResponse.ok) throw new Error('Failed to add doctor');
+                
+                const newDoctor = await doctorResponse.json();
+                
+                // Add initial appointment
+                const appointmentResponse = await fetch(`${API_URL}/appointments`, {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json',
+                    },
+                    body: JSON.stringify({
+                        doctor_id: newDoctor.id,
+                        next_available: document.getElementById('newNextAvailable').value
+                    })
+                });
+                
+                if (appointmentResponse.ok) {
+                    document.getElementById('addDoctorMessage').textContent = '✓ Doctor added successfully!';
+                    document.getElementById('addDoctorForm').reset();
+                    
+                    // Reload doctors
+                    await loadDoctors();
+                    
+                    setTimeout(() => {
+                        document.getElementById('addDoctorMessage').textContent = '';
+                        switchTab('manage');
+                    }, 2000);
+                }
+            } catch (error) {
+                console.error('Error adding doctor:', error);
+                alert('Error adding doctor. Please try again.');
+            } finally {
+                hideLoading();
+            }
+        }
+        
+        // Load bulk update list
+        function loadBulkUpdateList() {
+            const container = document.getElementById('bulkUpdateList');
+            
+            container.innerHTML = allDoctors.map(doctor => `
+                <div style="display: flex; justify-content: space-between; align-items: center; padding: 1rem; border-bottom: 1px solid var(--border-light);">
+                    <div style="flex: 1;">
+                        <strong>${doctor.name}</strong><br>
+                        <span style="color: var(--text-secondary); font-size: 0.875rem;">
+                            ${formatSpecialty(doctor.specialty)} • ${doctor.phone}
+                        </span>
+                    </div>
+                    <div style="display: flex; align-items: center; gap: 1rem;">
+                        <label style="font-size: 0.875rem; color: var(--text-secondary);">Next Available:</label>
+                        <input type="date" 
+                               class="date-input-small" 
+                               id="bulk-date-${doctor.id}"
+                               value="${doctor.next_available.split('T')[0]}"
+                               min="${new Date().toISOString().split('T')[0]}">
+                    </div>
+                </div>
+            `).join('');
+        }
+        
+        // Save all bulk updates
+        async function saveAllUpdates() {
+            showLoading();
+            let updateCount = 0;
+            
+            for (const doctor of allDoctors) {
+                const dateInput = document.getElementById(`bulk-date-${doctor.id}`);
+                if (dateInput && dateInput.value !== doctor.next_available.split('T')[0]) {
+                    try {
+                        await fetch(`${API_URL}/appointments`, {
+                            method: 'POST',
+                            headers: {
+                                'Content-Type': 'application/json',
+                            },
+                            body: JSON.stringify({
+                                doctor_id: doctor.id,
+                                next_available: dateInput.value
+                            })
+                        });
+                        updateCount++;
+                    } catch (error) {
+                        console.error(`Error updating doctor ${doctor.id}:`, error);
+                    }
+                }
+            }
+            
+            hideLoading();
+            alert(`Successfully updated ${updateCount} appointments!`);
+            loadDoctors();
+        }
+        
+        // Update statistics
+        function updateStats() {
+            const today = new Date();
+            today.setHours(0, 0, 0, 0);
+            
+            const weekFromNow = new Date(today);
+            weekFromNow.setDate(weekFromNow.getDate() + 7);
+            
+            const todayCount = allDoctors.filter(d => {
+                const apptDate = new Date(d.next_available);
+                return apptDate.toDateString() === today.toDateString();
+            }).length;
+            
+            const weekCount = allDoctors.filter(d => {
+                const apptDate = new Date(d.next_available);
+                return apptDate <= weekFromNow;
+            }).length;
+            
+            document.getElementById('totalDoctors').textContent = allDoctors.length;
+            document.getElementById('todayAvailable').textContent = todayCount;
+            document.getElementById('weekAvailable').textContent = weekCount;
+            document.getElementById('lastUpdated').textContent = new Date().toLocaleTimeString('en-US', {
+                hour: 'numeric',
+                minute: '2-digit'
+            });
+        }
+        
+        // Format specialty
+        function formatSpecialty(specialty) {
+            const specialtyMap = {
+                'primary-care': 'Primary Care',
+                'cardiology': 'Cardiology',
+                'dermatology': 'Dermatology',
+                'endocrinology': 'Endocrinology',
+                'ent': 'ENT',
+                'nephrology': 'Nephrology',
+                'neurology': 'Neurology',
+                'obgyn': 'OB/GYN',
+                'ophthalmology': 'Ophthalmology',
+                'orthopedics': 'Orthopedics',
+                'pediatrics': 'Pediatrics',
+                'psychiatry': 'Psychiatry',
+                'pulmonology': 'Pulmonology',
+                'rheumatology': 'Rheumatology'
+            };
+            return specialtyMap[specialty] || specialty;
+        }
+        
+        // Loading states
+        function showLoading() {
+            document.getElementById('loadingOverlay').style.display = 'flex';
+        }
+        
+        function hideLoading() {
+            document.getElementById('loadingOverlay').style.display = 'none';
+        }
+    </script>
+</body>
+</html>
