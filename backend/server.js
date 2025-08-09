@@ -15,6 +15,10 @@ const supabase = createClient(
 // Middleware
 app.use(cors());
 app.use(express.json());
+app.get('/', (req, res) => {
+  res.json({ status: 'Medical Appointments API is running!' });
+});
+
 
 // Test route
 app.get('/api/test', (req, res) => {
