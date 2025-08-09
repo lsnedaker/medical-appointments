@@ -1,5 +1,5 @@
 // API Configuration
-const API_URL = 'https://medical-appointments-api-n3yu.onrender.com';
+const API_URL = 'https://medical-appointments-api-n3yu.onrender.com/api';
 
 // DOM Elements
 const searchBtn = document.getElementById('searchBtn');
