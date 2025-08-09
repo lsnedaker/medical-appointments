@@ -1,0 +1,183 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Admin - Medical Appointments</title>
+    <link rel="stylesheet" href="style.css">
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
+    <style>
+        .admin-container {
+            max-width: 1200px;
+            margin: 2rem auto;
+            padding: 2rem;
+        }
+        .admin-header {
+            background: var(--bg-white);
+            padding: 2rem;
+            border-radius: var(--radius-lg);
+            margin-bottom: 2rem;
+            box-shadow: var(--shadow);
+        }
+        .doctor-update-card {
+            background: var(--bg-white);
+            padding: 1.5rem;
+            border-radius: var(--radius);
+            margin-bottom: 1rem;
+            box-shadow: var(--shadow-sm);
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+        }
+        .update-form {
+            display: flex;
+            gap: 1rem;
+            align-items: center;
+        }
+        .date-input {
+            padding: 0.5rem;
+            border: 1px solid var(--border);
+            border-radius: 6px;
+            font-size: 0.875rem;
+        }
+        .update-btn {
+            padding: 0.5rem 1rem;
+            background: var(--primary);
+            color: white;
+            border: none;
+            border-radius: 6px;
+            font-size: 0.875rem;
+            cursor: pointer;
+            font-weight: 500;
+        }
+        .update-btn:hover {
+            background: var(--primary-dark);
+        }
+        .success-message {
+            color: var(--success);
+            font-size: 0.875rem;
+            margin-left: 1rem;
+        }
+    </style>
+</head>
+<body>
+    <nav class="navbar">
+        <div class="nav-wrapper">
+            <div class="nav-brand">
+                <span class="brand-text">MedAppoints Admin</span>
+            </div>
+            <a href="index.html" style="color: var(--primary); text-decoration: none;">← Back to Main Site</a>
+        </div>
+    </nav>
+
+    <div class="admin-container">
+        <div class="admin-header">
+            <h1>Update Appointment Availability</h1>
+            <p>Manually update the next available appointment date for each doctor</p>
+        </div>
+
+        <div id="doctorsList"></div>
+    </div>
+
+    <script>
+        // Update this to your Render backend URL
+        const API_URL = 'https://medical-appointments-api-n3yu.onrender.com';
+
+        // Load all doctors
+        async function loadDoctors() {
+            try {
+                const response = await fetch(`${API_URL}/appointments`);
+                const doctors = await response.json();
+                
+                const doctorsList = document.getElementById('doctorsList');
+                doctorsList.innerHTML = doctors.map(doctor => `
+                    <div class="doctor-update-card">
+                        <div>
+                            <strong>${doctor.name}</strong><br>
+                            <span style="color: var(--text-secondary); font-size: 0.875rem;">
+                                ${formatSpecialty(doctor.specialty)} • ${doctor.city}, NC
+                            </span><br>
+                            <span style="color: var(--text-muted); font-size: 0.875rem;">
+                                Current: ${formatDate(doctor.next_available)}
+                            </span>
+                        </div>
+                        <div class="update-form">
+                            <input type="date" 
+                                   class="date-input" 
+                                   id="date-${doctor.id}"
+                                   value="${doctor.next_available.split('T')[0]}"
+                                   min="${new Date().toISOString().split('T')[0]}">
+                            <button class="update-btn" onclick="updateAppointment(${doctor.id})">
+                                Update
+                            </button>
+                            <span id="msg-${doctor.id}" class="success-message"></span>
+                        </div>
+                    </div>
+                `).join('');
+            } catch (error) {
+                console.error('Error loading doctors:', error);
+            }
+        }
+
+        async function updateAppointment(doctorId) {
+            const dateInput = document.getElementById(`date-${doctorId}`);
+            const msgSpan = document.getElementById(`msg-${doctorId}`);
+            
+            try {
+                const response = await fetch(`${API_URL}/appointments`, {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json',
+                    },
+                    body: JSON.stringify({
+                        doctor_id: doctorId,
+                        next_available: dateInput.value
+                    })
+                });
+
+                if (response.ok) {
+                    msgSpan.textContent = '✓ Updated';
+                    setTimeout(() => {
+                        msgSpan.textContent = '';
+                    }, 3000);
+                }
+            } catch (error) {
+                console.error('Error updating appointment:', error);
+                msgSpan.textContent = 'Error';
+                msgSpan.style.color = 'red';
+            }
+        }
+
+        function formatSpecialty(specialty) {
+            const specialtyMap = {
+                'primary-care': 'Primary Care',
+                'cardiology': 'Cardiology',
+                'dermatology': 'Dermatology',
+                'endocrinology': 'Endocrinology',
+                'ent': 'ENT',
+                'nephrology': 'Nephrology',
+                'neurology': 'Neurology',
+                'obgyn': 'OB/GYN',
+                'ophthalmology': 'Ophthalmology',
+                'orthopedics': 'Orthopedics',
+                'pediatrics': 'Pediatrics',
+                'psychiatry': 'Psychiatry',
+                'pulmonology': 'Pulmonology',
+                'rheumatology': 'Rheumatology'
+            };
+            return specialtyMap[specialty] || specialty;
+        }
+
+        function formatDate(dateString) {
+            return new Date(dateString).toLocaleDateString('en-US', {
+                month: 'short',
+                day: 'numeric',
+                year: 'numeric'
+            });
+        }
+
+        // Load doctors on page load
+        loadDoctors();
+    </script>
+</body>
+</html>
