@@ -595,6 +595,82 @@
     </div>
 
     <script>
+        // Add this to the TOP of the <script> section in admin-enhanced.html
+// BEFORE any other JavaScript code
+
+// ============================================
+// AUTHENTICATION CHECK
+// ============================================
+
+// Initialize Supabase
+const SUPABASE_URL = 'YOUR_SUPABhttps://uuxtywqbyyczpjptzmvg.supabase.coSE_URL'; // Replace with your Supabase URL
+const SUPABASE_ANON_KEY = 'YOUR_SUPABASE_ANeyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InV1eHR5d3FieXljenBqcHR6bXZnIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NTQ3NjExNTksImV4cCI6MjA3MDMzNzE1OX0.2c6mAfSSK0D7i2LtaMP11LlvGqKgvjmgTg4BI722wUoN_KEY'; // Replace with your Supabase anon key
+
+// Create Supabase client if not already created
+if (typeof window.supabase === 'undefined') {
+    // Add Supabase script dynamically
+    const script = document.createElement('script');
+    script.src = 'https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2';
+    script.onload = initializeAuth;
+    document.head.appendChild(script);
+} else {
+    initializeAuth();
+}
+
+async function initializeAuth() {
+    const supabase = window.supabase.createClient(SUPABASE_URL, SUPABASE_ANON_KEY);
+    
+    // Check authentication
+    const { data: { session } } = await supabase.auth.getSession();
+    
+    if (!session) {
+        // Not authenticated, redirect to login
+        alert('Please login to access the admin dashboard');
+        window.location.href = 'admin-login.html';
+        return;
+    }
+    
+    // User is authenticated, continue loading the page
+    console.log('Admin authenticated:', session.user.email);
+    
+    // Add logout button to the nav
+    addLogoutButton(supabase);
+    
+    // Continue with your existing initialization
+    loadDoctors();
+    setupEventListeners();
+    setMinDate();
+}
+
+// Add logout functionality
+function addLogoutButton(supabase) {
+    const navWrapper = document.querySelector('.nav-wrapper');
+    if (navWrapper) {
+        const logoutBtn = document.createElement('button');
+        logoutBtn.textContent = 'Logout';
+        logoutBtn.style.cssText = `
+            background: #ef4444;
+            color: white;
+            border: none;
+            padding: 0.5rem 1rem;
+            border-radius: 8px;
+            cursor: pointer;
+            font-weight: 500;
+        `;
+        logoutBtn.onclick = async () => {
+            await supabase.auth.signOut();
+            localStorage.removeItem('adminAuthenticated');
+            window.location.href = 'admin-login.html';
+        };
+        navWrapper.appendChild(logoutBtn);
+    }
+}
+
+// ============================================
+// END AUTHENTICATION CHECK
+// ============================================
+
+// Your existing code continues here...
         // Update with your backend URL
         const API_URL = 'https://medical-appointments-api-n3yu.onrender.com/api';
         

@@ -486,14 +486,30 @@
     </main>
 
     <!-- Footer -->
-    <footer class="footer">
-        <div class="footer-content">
-            <p>© 2024 MedAppoints • For informational purposes only</p>
-            <p>Location-based search for medical appointments</p>
-            <p><a href="admin-enhanced.html" style="color: white; opacity: 0.7;">Admin</a></p>
-        </div>
-    </footer>
+<footer class="footer">
+    <div class="footer-content">
+        <p>© 2024 MedAppoints • For informational purposes only</p>
+        <p>Location-based search for medical appointments</p>
+        <!-- Admin link removed for security -->
+    </div>
+</footer>
 
     <script src="script-location.js"></script>
+    <!-- Add this secret keyboard shortcut for admin access (optional) -->
+<script>
+    // Secret keyboard shortcut for admin access (Ctrl+Shift+A)
+    let keys = {};
+    document.addEventListener('keydown', (e) => {
+        keys[e.key] = true;
+        if (keys['Control'] && keys['Shift'] && keys['A']) {
+            // Silently navigate to admin page
+            window.location.href = 'admin-enhanced.html';
+        }
+    });
+    document.addEventListener('keyup', (e) => {
+        delete keys[e.key];
+    });
+</script>
+
 </body>
 </html>
