@@ -1,0 +1,111 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>MedAppoints - Find Your Next Doctor Appointment</title>
+    <link rel="stylesheet" href="style.css">
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800;900&display=swap" rel="stylesheet">
+</head>
+<body>
+    <!-- Navigation -->
+    <nav class="navbar">
+        <div class="nav-wrapper">
+            <div class="nav-brand">
+                <span class="brand-text">MedAppoints</span>
+                <span class="brand-badge">BETA</span>
+            </div>
+            <div class="nav-status">
+                <span class="status-dot"></span>
+                <span id="lastUpdatedNav">Live Updates • Eastern NC</span>
+            </div>
+        </div>
+    </nav>
+
+    <!-- Hero Section - Simplified -->
+    <section class="hero-simple">
+        <div class="hero-content-simple">
+            <h1 class="hero-title-simple">
+                Find Your Next Doctor Appointment in <span class="text-accent">Eastern NC</span>
+            </h1>
+            <p class="hero-subtitle-simple">
+                Select a specialty to see the next available appointments
+            </p>
+            
+            <!-- Location Filter -->
+            <div class="location-filter">
+                <label>Filter by location:</label>
+                <div class="location-buttons">
+                    <button class="location-btn active" data-location="all">All Areas</button>
+                    <button class="location-btn" data-location="28557">Morehead City</button>
+                    <button class="location-btn" data-location="28516">Beaufort</button>
+                    <button class="location-btn" data-location="28570">Newport</button>
+                    <button class="location-btn" data-location="28532">Havelock</button>
+                </div>
+            </div>
+        </div>
+    </section>
+
+    <!-- Main Content - Specialty Cards -->
+    <main class="specialty-section">
+        <div class="specialty-container">
+            <!-- Loading State -->
+            <div id="loadingState" class="loading-state">
+                <div class="loading-spinner"></div>
+                <p>Loading appointments...</p>
+            </div>
+
+            <!-- Specialty Grid -->
+            <div id="specialtyGrid" class="specialty-grid">
+                <!-- Specialty cards will be dynamically inserted here -->
+            </div>
+        </div>
+    </main>
+
+    <!-- Quick Stats Bar -->
+    <section class="stats-bar">
+        <div class="stats-container">
+            <div class="stat-item">
+                <span class="stat-number" id="totalDoctors">0</span>
+                <span class="stat-label">Doctors Tracked</span>
+            </div>
+            <div class="stat-item">
+                <span class="stat-number" id="availableToday">0</span>
+                <span class="stat-label">Available Today</span>
+            </div>
+            <div class="stat-item">
+                <span class="stat-number" id="availableWeek">0</span>
+                <span class="stat-label">This Week</span>
+            </div>
+            <div class="stat-item">
+                <span class="stat-number" id="lastUpdated">--</span>
+                <span class="stat-label">Last Updated</span>
+            </div>
+        </div>
+    </section>
+
+    <!-- Footer -->
+    <footer class="footer">
+        <div class="footer-content">
+            <p>© 2024 MedAppoints • For informational purposes only</p>
+            <p>AI-powered daily updates from medical offices</p>
+            <p><a href="admin-enhanced.html" style="color: white; opacity: 0.7;">Admin</a></p>
+        </div>
+    </footer>
+
+    <!-- Modal for Doctor Details -->
+    <div id="doctorModal" class="modal hidden">
+        <div class="modal-content">
+            <span class="modal-close">&times;</span>
+            <h2 id="modalSpecialty" class="modal-title"></h2>
+            <div id="modalDoctorList" class="modal-doctor-list">
+                <!-- Doctor details will be inserted here -->
+            </div>
+        </div>
+    </div>
+
+    <script src="script-specialty.js"></script>
+</body>
+</html>
