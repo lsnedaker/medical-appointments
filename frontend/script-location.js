@@ -223,52 +223,60 @@ async function geocodeAddress(address) {
     });
 }
 
-// Filter and display results
+// Also update the filterAndDisplay function to ensure loading is hidden after displaying results:
 function filterAndDisplay() {
-    if (!userLocation) return;
+    if (!userLocation) {
+        hideLoading();
+        return;
+    }
     
     showLoading();
     
-    const doctorsWithDistance = allDoctors.map(doctor => {
-        // Skip doctors without coordinates
-        if (!doctor.latitude || !doctor.longitude) {
+    // Add a small delay to show the loading spinner
+    setTimeout(() => {
+        const doctorsWithDistance = allDoctors.map(doctor => {
+            // Skip doctors without coordinates
+            if (!doctor.latitude || !doctor.longitude) {
+                return {
+                    ...doctor,
+                    distance: 999, // Put at end if no coordinates
+                    daysUntil: getDaysUntilAppointment(doctor.next_available)
+                };
+            }
+            
+            const distance = calculateDistance(
+                userLocation.lat,
+                userLocation.lng,
+                doctor.latitude,
+                doctor.longitude
+            );
+            
             return {
                 ...doctor,
-                distance: 999, // Put at end if no coordinates
+                distance: distance,
                 daysUntil: getDaysUntilAppointment(doctor.next_available)
             };
+        });
+        
+        // Filter by radius
+        let filteredDoctors = doctorsWithDistance.filter(doc => doc.distance <= searchRadius);
+        
+        // Filter by specialty if selected
+        const selectedSpecialty = document.getElementById('specialtySelect').value;
+        if (selectedSpecialty) {
+            filteredDoctors = filteredDoctors.filter(doc => doc.specialty === selectedSpecialty);
         }
         
-        const distance = calculateDistance(
-            userLocation.lat,
-            userLocation.lng,
-            doctor.latitude,
-            doctor.longitude
-        );
+        // Sort based on selected method
+        filteredDoctors = sortDoctors(filteredDoctors, sortMethod);
         
-        return {
-            ...doctor,
-            distance: distance,
-            daysUntil: getDaysUntilAppointment(doctor.next_available)
-        };
-    });
-    
-    // Filter by radius
-    let filteredDoctors = doctorsWithDistance.filter(doc => doc.distance <= searchRadius);
-    
-    // Filter by specialty if selected
-    const selectedSpecialty = document.getElementById('specialtySelect').value;
-    if (selectedSpecialty) {
-        filteredDoctors = filteredDoctors.filter(doc => doc.specialty === selectedSpecialty);
-    }
-    
-    // Sort based on selected method
-    filteredDoctors = sortDoctors(filteredDoctors, sortMethod);
-    
-    // Display results
-    displayResults(filteredDoctors);
-    updateResultsHeader(filteredDoctors.length);
-    hideLoading();
+        // Display results
+        displayResults(filteredDoctors);
+        updateResultsHeader(filteredDoctors.length);
+        
+        // IMPORTANT: Ensure loading is hidden after everything is done
+        hideLoading();
+    }, 100); // Small delay to ensure loading spinner shows
 }
 
 // Sort doctors based on method
@@ -465,23 +473,47 @@ function callOffice(phone) {
     alert(`Call ${phone} to schedule your appointment`);
 }
 
-// UI helpers
+// UI helpers - FIXED LOADING SPINNER
 function showLoading() {
-    document.getElementById('loadingState').classList.remove('hidden');
-    document.getElementById('resultsGrid').style.display = 'none';
-    document.getElementById('emptyState').classList.add('hidden');
+    const loadingState = document.getElementById('loadingState');
+    const resultsGrid = document.getElementById('resultsGrid');
+    const emptyState = document.getElementById('emptyState');
+    
+    if (loadingState) {
+        loadingState.classList.remove('hidden');
+        loadingState.style.display = 'flex'; // Ensure it's visible
+    }
+    
+    if (resultsGrid) {
+        resultsGrid.style.display = 'none';
+    }
+    
+    if (emptyState) {
+        emptyState.classList.add('hidden');
+    }
 }
 
 function hideLoading() {
-    document.getElementById('loadingState').classList.add('hidden');
+    const loadingState = document.getElementById('loadingState');
+    
+    if (loadingState) {
+        loadingState.classList.add('hidden');
+        loadingState.style.display = 'none'; // Force hide with display none
+    }
 }
 
 function showError(message) {
     const errorDiv = document.getElementById('locationError');
-    errorDiv.textContent = message;
-    errorDiv.style.display = 'block';
+    if (errorDiv) {
+        errorDiv.textContent = message;
+        errorDiv.style.display = 'block';
+    }
+    hideLoading(); // Make sure loading is hidden when showing error
 }
 
 function hideError() {
-    document.getElementById('locationError').style.display = 'none';
+    const errorDiv = document.getElementById('locationError');
+    if (errorDiv) {
+        errorDiv.style.display = 'none';
+    }
 }
