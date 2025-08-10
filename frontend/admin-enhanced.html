@@ -479,6 +479,26 @@
             </select>
         </div>
         <div class="form-group">
+    <label class="form-label">Latitude (Optional)</label>
+    <input type="number" 
+           id="newLatitude" 
+           class="form-input" 
+           placeholder="34.7227"
+           step="0.0001"
+           min="-90"
+           max="90">
+</div>
+<div class="form-group">
+    <label class="form-label">Longitude (Optional)</label>
+    <input type="number" 
+           id="newLongitude" 
+           class="form-input" 
+           placeholder="-76.8583"
+           step="0.0001"
+           min="-180"
+           max="180">
+</div>
+        <div class="form-group">
             <label class="form-label">First Available Appointment *</label>
             <input type="date" 
                    id="newNextAvailable" 
@@ -853,14 +873,16 @@ window.deleteDoctor = deleteDoctor;
     }
     
     const formData = {
-        name: document.getElementById('newName').value,
-        specialty: specialtyValue,
-        practice: document.getElementById('newPractice').value,
-        phone: document.getElementById('newPhone').value,
-        address: document.getElementById('newAddress').value,
-        city: document.getElementById('newCity').value,
-        zip_code: document.getElementById('newZip').value
-    };
+    name: document.getElementById('newName').value,
+    specialty: getSpecialtyValue(),
+    practice: document.getElementById('newPractice').value,
+    phone: document.getElementById('newPhone').value,
+    address: document.getElementById('newAddress').value,
+    city: document.getElementById('newCity').value,
+    zip_code: document.getElementById('newZip').value,
+    latitude: document.getElementById('newLatitude').value || null,
+    longitude: document.getElementById('newLongitude').value || null
+};
     
     showLoading();
     

@@ -58,11 +58,11 @@ app.get('/api/appointments', async (req, res) => {
 // Add a new doctor
 app.post('/api/doctors', async (req, res) => {
   try {
-    const { name, specialty, address, city, zip_code, phone } = req.body;
+    const { name, specialty, practice, address, city, zip_code, phone, latitude, longitude } = req.body;
     
     const { data, error } = await supabase
       .from('doctors')
-      .insert([{ name, specialty, address, city, zip_code, phone }])
+      .insert([{ name, specialty, practice, address, city, zip_code, phone, latitude, longitude }])
       .select();
 
     if (error) throw error;
