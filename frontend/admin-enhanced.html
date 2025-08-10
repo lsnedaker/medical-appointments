@@ -756,16 +756,20 @@ function loadCustomSpecialties() {
             }
         }
         
-        // Display doctors in table
+      
 function displayDoctors(doctors) {
     const tbody = document.getElementById('doctorsTableBody');
     
-    tbody.innerHTML = doctors.map(doctor => `
+    tbody.innerHTML = doctors.map(doctor => {
+        // Ensure practice field is displayed correctly
+        const practiceDisplay = doctor.practice || 'Not specified';
+        
+        return `
         <tr>
             <td class="doctor-name">${doctor.name}</td>
             <td><span class="specialty-badge">${formatSpecialty(doctor.specialty)}</span></td>
             <td>
-                <strong>${doctor.practice || 'Not specified'}</strong><br>
+                <strong>${practiceDisplay}</strong><br>
                 <span style="font-size: 0.875rem; color: var(--text-secondary);">
                     ${doctor.city}, NC ${doctor.zip_code}
                 </span>
@@ -791,7 +795,8 @@ function displayDoctors(doctors) {
                 <span id="msg-${doctor.id}" class="success-msg"></span>
             </td>
         </tr>
-    `).join('');
+    `;
+    }).join('');
 }
         
         // Filter doctors
@@ -970,8 +975,8 @@ document.getElementById('editDoctorForm').addEventListener('submit', async (e) =
         hideLoading();
     }
 });
-        // Add new doctor
-       async function addNewDoctor() {
+        // FIXED addNewDoctor function - Replace the existing addNewDoctor function with this one
+async function addNewDoctor() {
     const specialtyValue = getSpecialtyValue();
     const customSpecialtyInput = document.getElementById('customSpecialty');
     
@@ -984,15 +989,25 @@ document.getElementById('editDoctorForm').addEventListener('submit', async (e) =
         addCustomSpecialtyToDropdowns(specialtyValue, displayName);
     }
     
+    // Get the practice value explicitly
+    const practiceValue = document.getElementById('newPractice').value;
+    
     const formData = {
         name: document.getElementById('newName').value,
         specialty: specialtyValue,
-        practice: document.getElementById('newPractice').value,
+        practice: practiceValue, // Ensure practice is included
         phone: document.getElementById('newPhone').value,
         address: document.getElementById('newAddress').value,
         city: document.getElementById('newCity').value,
         zip_code: document.getElementById('newZip').value
     };
+    
+    // Log the data being sent for debugging
+    console.log('Sending doctor data:', formData);
+    
+    // Check for manual lat/lng inputs
+    const manualLat = document.getElementById('newLatitude').value;
+    const manualLng = document.getElementById('newLongitude').value;
     
     // Build full address for geocoding
     const fullAddress = `${formData.address}, ${formData.city}, NC ${formData.zip_code}`;
@@ -1000,14 +1015,21 @@ document.getElementById('editDoctorForm').addEventListener('submit', async (e) =
     showLoading();
     
     try {
-        // Get coordinates from Google Maps
-        const coords = await geocodeAddress(fullAddress);
-        if (coords) {
-            formData.latitude = coords.lat;
-            formData.longitude = coords.lng;
-            console.log(`Geocoded ${fullAddress} to:`, coords);
+        // Use manual coordinates if provided, otherwise geocode
+        if (manualLat && manualLng) {
+            formData.latitude = parseFloat(manualLat);
+            formData.longitude = parseFloat(manualLng);
+            console.log('Using manual coordinates:', { lat: formData.latitude, lng: formData.longitude });
         } else {
-            console.warn('Could not geocode address, using city defaults');
+            // Get coordinates from Google Maps
+            const coords = await geocodeAddress(fullAddress);
+            if (coords) {
+                formData.latitude = coords.lat;
+                formData.longitude = coords.lng;
+                console.log(`Geocoded ${fullAddress} to:`, coords);
+            } else {
+                console.warn('Could not geocode address, using city defaults');
+            }
         }
         
         // Add doctor
@@ -1019,9 +1041,14 @@ document.getElementById('editDoctorForm').addEventListener('submit', async (e) =
             body: JSON.stringify(formData)
         });
         
-        if (!doctorResponse.ok) throw new Error('Failed to add doctor');
+        if (!doctorResponse.ok) {
+            const errorText = await doctorResponse.text();
+            console.error('Server response:', errorText);
+            throw new Error('Failed to add doctor');
+        }
         
         const newDoctor = await doctorResponse.json();
+        console.log('Doctor added successfully:', newDoctor);
         
         // Add initial appointment
         const appointmentResponse = await fetch(`${API_URL}/appointments`, {
@@ -1049,7 +1076,7 @@ document.getElementById('editDoctorForm').addEventListener('submit', async (e) =
         }
     } catch (error) {
         console.error('Error adding doctor:', error);
-        alert('Error adding doctor. Please try again.');
+        alert('Error adding doctor. Please check the console for details and try again.');
     } finally {
         hideLoading();
     }
