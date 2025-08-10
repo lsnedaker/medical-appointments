@@ -4,7 +4,7 @@ const API_URL = 'https://medical-appointments-api-n3yu.onrender.com/api';
 // State
 let allDoctors = [];
 let userLocation = null;
-let searchRadius = 10;
+let searchRadius = 25; // Default to 25 miles
 let sortMethod = 'balanced';
 
 // Initialize
@@ -45,18 +45,29 @@ function setupEventListeners() {
     });
 }
 
-// Setup radius slider
+// Setup radius slider - UPDATED FOR LARGER DISTANCES
 function setupRadiusSlider() {
     const slider = document.getElementById('radiusSlider');
     const valueDisplay = document.getElementById('radiusValue');
     
+    // Update slider attributes for new range
+    slider.min = '5';
+    slider.max = '501'; // 501 represents "Max"
+    slider.value = '25'; // Default 25 miles
+    
     slider.addEventListener('input', (e) => {
-        const value = e.target.value;
-        searchRadius = parseInt(value);
-        valueDisplay.textContent = `${value} miles`;
+        const value = parseInt(e.target.value);
+        
+        if (value > 500) {
+            searchRadius = 99999; // Effectively unlimited
+            valueDisplay.textContent = 'Max (Nationwide)';
+        } else {
+            searchRadius = value;
+            valueDisplay.textContent = `${value} miles`;
+        }
         
         // Update slider fill
-        const percent = ((value - slider.min) / (slider.max - slider.min)) * 100;
+        const percent = ((e.target.value - slider.min) / (slider.max - slider.min)) * 100;
         slider.style.setProperty('--value', `${percent}%`);
         
         // Re-filter if we have results
@@ -64,6 +75,9 @@ function setupRadiusSlider() {
             filterAndDisplay();
         }
     });
+    
+    // Set initial value display
+    valueDisplay.textContent = '25 miles';
 }
 
 // Load initial data
@@ -104,90 +118,22 @@ function getUserLocation() {
     );
 }
 
-// ADD THIS FUNCTION - Define zip code coordinates for Eastern NC
-function getZipCodeCoordinates(zipCode) {
-    // Eastern NC zip codes with their coordinates and city names
-    const zipCodes = {
+// Eastern NC zip codes (keeping for quick lookup)
+function getEasternNCZipCodes() {
+    return {
         // Carteret County
-        '28557': { lat: 34.7227, lng: -76.8583, city: 'Morehead City' },
-        '28516': { lat: 34.7649, lng: -76.8188, city: 'Beaufort' },
-        '28570': { lat: 34.7804, lng: -76.8480, city: 'Newport' },
-        '28531': { lat: 34.7785, lng: -76.6216, city: 'Harkers Island' },
-        '28511': { lat: 34.6879, lng: -76.5713, city: 'Atlantic' },
-        '28520': { lat: 34.9082, lng: -76.6866, city: 'Cedar Point' },
-        '28528': { lat: 34.8965, lng: -76.5516, city: 'Gloucester' },
-        '28581': { lat: 34.8696, lng: -76.5666, city: 'Smyrna' },
-        '28594': { lat: 34.6601, lng: -76.5260, city: 'Sea Level' },
-        
+        '28557': { lat: 34.7227, lng: -76.8583, city: 'Morehead City', state: 'NC' },
+        '28516': { lat: 34.7649, lng: -76.8188, city: 'Beaufort', state: 'NC' },
+        '28570': { lat: 34.7804, lng: -76.8480, city: 'Newport', state: 'NC' },
+        '28531': { lat: 34.7785, lng: -76.6216, city: 'Harkers Island', state: 'NC' },
         // Craven County
-        '28532': { lat: 34.9021, lng: -77.0330, city: 'Havelock' },
-        '28560': { lat: 35.1085, lng: -77.0441, city: 'New Bern' },
-        '28561': { lat: 35.1085, lng: -77.0441, city: 'New Bern' },
-        '28562': { lat: 35.1085, lng: -77.0441, city: 'New Bern' },
-        '28563': { lat: 35.1085, lng: -77.0441, city: 'New Bern' },
-        '28564': { lat: 35.1085, lng: -77.0441, city: 'New Bern' },
-        
-        // Onslow County
-        '28540': { lat: 34.7540, lng: -77.4019, city: 'Jacksonville' },
-        '28544': { lat: 34.6583, lng: -77.4560, city: 'Camp Lejeune' },
-        '28546': { lat: 34.7540, lng: -77.4019, city: 'Jacksonville' },
-        '28547': { lat: 34.7226, lng: -77.2305, city: 'Camp Lejeune' },
-        '28584': { lat: 34.5780, lng: -77.3172, city: 'Swansboro' },
-        '28539': { lat: 34.5780, lng: -77.3172, city: 'Hubert' },
-        '28574': { lat: 34.9079, lng: -77.2338, city: 'Richlands' },
-        '28585': { lat: 34.7061, lng: -77.1241, city: 'Sneads Ferry' },
-        
-        // Pender County
-        '28443': { lat: 34.5516, lng: -77.8830, city: 'Hampstead' },
-        '28445': { lat: 34.2268, lng: -77.8664, city: 'Holly Ridge' },
-        '28457': { lat: 34.4579, lng: -77.5538, city: 'Maple Hill' },
-        '28460': { lat: 34.3718, lng: -77.7563, city: 'Rocky Point' },
-        '28464': { lat: 34.5710, lng: -77.8358, city: 'Surf City' },
-        '28478': { lat: 34.5379, lng: -78.2736, city: 'Wallace' },
-        
-        // Jones County
-        '28571': { lat: 35.0048, lng: -77.3520, city: 'Pollocksville' },
-        '28580': { lat: 34.9965, lng: -77.5811, city: 'Trenton' },
-        '28526': { lat: 34.8532, lng: -77.4463, city: 'Maysville' },
-        
-        // Pamlico County
-        '28571': { lat: 35.0048, lng: -77.3520, city: 'Oriental' },
-        '28510': { lat: 35.2057, lng: -76.6977, city: 'Arapahoe' },
-        '28515': { lat: 35.1816, lng: -76.6196, city: 'Bayboro' },
-        '28529': { lat: 35.1465, lng: -76.8008, city: 'Grantsboro' },
-        '28552': { lat: 35.0343, lng: -76.6238, city: 'Oriental' },
-        '28555': { lat: 35.0879, lng: -76.7274, city: 'Minnesott Beach' },
-        '28587': { lat: 35.2679, lng: -76.5710, city: 'Stonewall' },
-        '28589': { lat: 35.3607, lng: -76.5952, city: 'Vandemere' },
-        
-        // Lenoir County
-        '28501': { lat: 35.2730, lng: -77.5814, city: 'Kinston' },
-        '28502': { lat: 35.2730, lng: -77.5814, city: 'Kinston' },
-        '28503': { lat: 35.2730, lng: -77.5814, city: 'Kinston' },
-        '28504': { lat: 35.2730, lng: -77.5814, city: 'Kinston' },
-        '28523': { lat: 35.1454, lng: -77.8647, city: 'Deep Run' },
-        '28538': { lat: 35.3765, lng: -77.7083, city: 'Hookerton' },
-        '28543': { lat: 35.4051, lng: -77.5861, city: 'La Grange' },
-        '28572': { lat: 35.2121, lng: -77.7552, city: 'Pink Hill' },
-        
-        // Duplin County
-        '28518': { lat: 34.9957, lng: -78.0542, city: 'Beulaville' },
-        '28525': { lat: 35.0524, lng: -77.9061, city: 'Faison' },
-        '28365': { lat: 35.1341, lng: -78.1897, city: 'Mount Olive' },
-        '28349': { lat: 34.8366, lng: -77.9408, city: 'Kenansville' },
-        '28466': { lat: 35.0057, lng: -78.3164, city: 'Rose Hill' },
-        '28453': { lat: 34.7366, lng: -78.1808, city: 'Magnolia' },
-        '28398': { lat: 35.1957, lng: -78.1033, city: 'Warsaw' },
-        '28327': { lat: 35.0168, lng: -78.0039, city: 'Calypso' },
-        '28341': { lat: 34.9693, lng: -77.9436, city: 'Greenevers' },
-        '28444': { lat: 34.8321, lng: -78.0239, city: 'Chinquapin' },
-        '28435': { lat: 34.7360, lng: -78.0344, city: 'Teachey' }
+        '28532': { lat: 34.9021, lng: -77.0330, city: 'Havelock', state: 'NC' },
+        '28560': { lat: 35.1085, lng: -77.0441, city: 'New Bern', state: 'NC' },
+        // Add more as needed...
     };
-    
-    return zipCodes[zipCode] || null;
 }
 
-// Perform search based on entered location
+// Perform search based on entered location - UPDATED
 async function performSearch() {
     const locationInput = document.getElementById('locationInput').value.trim();
     
@@ -209,33 +155,39 @@ async function performSearch() {
     
     // Check if it's a zip code (5 digits)
     if (/^\d{5}$/.test(locationInput)) {
-        // Handle zip code
-        const coords = getZipCodeCoordinates(locationInput);
-        if (coords) {
+        // First check our local Eastern NC database for speed
+        const easternNCZips = getEasternNCZipCodes();
+        if (easternNCZips[locationInput]) {
+            const coords = easternNCZips[locationInput];
             userLocation = {
                 lat: coords.lat,
                 lng: coords.lng,
-                display: `${coords.city}, NC ${locationInput}`
+                display: `${coords.city}, ${coords.state} ${locationInput}`
             };
             hideError();
             filterAndDisplay();
         } else {
-            // If zip code not in our list, try geocoding it
+            // For any zip code not in our local database, use Google Geocoding
+            // This handles ALL US zip codes
             await geocodeAddress(locationInput);
         }
     } else {
-        // Try to geocode the address
+        // For non-zip code input, use geocoding
         await geocodeAddress(locationInput);
     }
 }
 
-// Geocode address using Google Maps API
+// Geocode address using Google Maps API - UPDATED
 async function geocodeAddress(address) {
     return new Promise((resolve) => {
         const geocoder = new google.maps.Geocoder();
         
-        // Add state if not included
-        if (!address.toLowerCase().includes(', nc') && !address.toLowerCase().includes(',nc')) {
+        // Only add NC if it's not a zip code and doesn't already have a state
+        const isZipCode = /^\d{5}$/.test(address);
+        if (!isZipCode && 
+            !address.toLowerCase().includes(', ') && 
+            !address.match(/\b[A-Z]{2}\b/)) {
+            // If no state specified and not a zip, default to NC
             address += ', NC';
         }
         
@@ -348,7 +300,7 @@ function toRad(deg) {
     return deg * (Math.PI / 180);
 }
 
-// Display results
+// Display results - UPDATED TO SHOW SPECIALTY AND FULL DATE
 function displayResults(doctors) {
     const grid = document.getElementById('resultsGrid');
     
@@ -381,6 +333,10 @@ function displayResults(doctors) {
                 
                 <div class="card-body">
                     <div class="info-row">
+                        <span class="info-label">Specialty:</span>
+                        <span style="font-weight: 600; color: var(--primary);">${formatSpecialty(doctor.specialty)}</span>
+                    </div>
+                    <div class="info-row">
                         <span class="info-label">Practice:</span>
                         <span>${doctor.practice || 'Not specified'}</span>
                     </div>
@@ -396,7 +352,9 @@ function displayResults(doctors) {
                 
                 <div class="card-footer">
                     <div class="availability-section">
-                        <div class="appointment-date">${formatDateShort(doctor.next_available)}</div>
+                        <div class="appointment-date" style="font-size: 1.1rem; font-weight: 700;">
+                            ${formatDateWithYear(doctor.next_available)}
+                        </div>
                         <div class="appointment-relative">${getDaysFromNow(doctor.next_available)}</div>
                     </div>
                     <button class="call-button" onclick="callOffice('${doctor.phone}')">
@@ -408,13 +366,22 @@ function displayResults(doctors) {
     }).join('');
 }
 
-// Update results header
+// Update results header - UPDATED FOR MAX RADIUS
 function updateResultsHeader(count) {
     const header = document.getElementById('resultsHeader');
     header.style.display = 'block';
     
     document.getElementById('resultCount').textContent = count;
-    document.getElementById('searchRadius').textContent = searchRadius;
+    
+    // Display appropriate radius text
+    if (searchRadius > 9999) {
+        document.getElementById('searchRadius').textContent = 'nationwide';
+        document.getElementById('searchRadius').nextSibling.textContent = ' from ';
+    } else {
+        document.getElementById('searchRadius').textContent = searchRadius;
+        document.getElementById('searchRadius').nextSibling.textContent = ' miles of ';
+    }
+    
     document.getElementById('searchLocation').textContent = userLocation.display;
 }
 
@@ -437,6 +404,15 @@ function formatSpecialty(specialty) {
         'rheumatology': 'Rheumatology'
     };
     return specialtyMap[specialty] || specialty;
+}
+
+// NEW FUNCTION - Format date with year
+function formatDateWithYear(dateString) {
+    const date = new Date(dateString);
+    const month = date.toLocaleDateString('en-US', { month: 'short' });
+    const day = date.getDate();
+    const year = date.getFullYear();
+    return `${month} ${day}, ${year}`;
 }
 
 function formatDateShort(dateString) {
