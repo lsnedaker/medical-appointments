@@ -600,9 +600,10 @@
         
         let allDoctors = [];
         let currentTab = 'manage';
-        // Geocode address using Google Maps
-    async function geocodeAddress(address) {
-        return new Promise((resolve, reject) => {
+        // Also update the geocodeAddress function to handle errors better
+async function geocodeAddress(address) {
+    return new Promise((resolve) => {
+        try {
             const geocoder = new google.maps.Geocoder();
             
             geocoder.geocode({ address: address }, (results, status) => {
@@ -613,12 +614,43 @@
                         lng: location.lng()
                     });
                 } else {
-                    console.error('Geocoding failed:', status);
-                    resolve(null); // Return null instead of rejecting
+                    console.warn('Geocoding failed for address:', address, 'Status:', status);
+                    resolve(null); // Return null instead of throwing error
                 }
             });
-        });
-    }
+        } catch (error) {
+            console.warn('Geocoder error:', error);
+            resolve(null); // Return null on any error
+        }
+    });
+}
+
+// Quick test function to verify the backend endpoint
+async function quickTestPractice() {
+    const testData = {
+        name: "Quick Test " + Date.now(),
+        specialty: "primary-care",
+        practice: "TEST PRACTICE FIELD",
+        phone: "(252) 555-" + Math.floor(Math.random() * 9000 + 1000),
+        address: "123 Test St",
+        city: "Morehead City",
+        zip_code: "28557"
+    };
+    
+    console.log('Testing with:', testData);
+    
+    const response = await fetch(`${API_URL}/doctors`, {
+        method: 'POST',
+        headers: {'Content-Type': 'application/json'},
+        body: JSON.stringify(testData)
+    });
+    
+    const result = await response.json();
+    console.log('Result:', result);
+    console.log('Practice saved?', result.practice === "TEST PRACTICE FIELD" ? "YES ✅" : "NO ❌");
+    
+    return result;
+}
 
         // Initialize
 document.addEventListener('DOMContentLoaded', () => {
@@ -1012,25 +1044,11 @@ document.getElementById('editDoctorForm').addEventListener('submit', async (e) =
         hideLoading();
     }
 });
-  // ============================================
-// DEBUGGING VERSION - Replace your addNewDoctor function with this
-// This will help us identify exactly where the practice value is getting lost
-// ============================================
+  / Replace your addNewDoctor function with this version
+// This handles the Google Maps error and ensures practice field is saved
 
 async function addNewDoctor() {
     console.log('=== START ADD NEW DOCTOR ===');
-    
-    // Step 1: Check if the form element exists and has the right ID
-    const practiceInput = document.getElementById('newPractice');
-    console.log('Practice input element:', practiceInput);
-    console.log('Practice input value:', practiceInput ? practiceInput.value : 'ELEMENT NOT FOUND');
-    
-    // Let's also check the form to make sure all elements are there
-    console.log('All form elements:');
-    console.log('- Name input:', document.getElementById('newName'));
-    console.log('- Specialty input:', document.getElementById('newSpecialty'));
-    console.log('- Practice input:', document.getElementById('newPractice'));
-    console.log('- Phone input:', document.getElementById('newPhone'));
     
     const specialtyValue = getSpecialtyValue();
     const customSpecialtyInput = document.getElementById('customSpecialty');
@@ -1044,58 +1062,54 @@ async function addNewDoctor() {
         addCustomSpecialtyToDropdowns(specialtyValue, displayName);
     }
     
-    // Step 2: Build the form data object with explicit practice field
+    // Get all form values INCLUDING practice
     const practiceValue = document.getElementById('newPractice').value;
     
     const formData = {
         name: document.getElementById('newName').value,
         specialty: specialtyValue,
-        practice: practiceValue,  // Explicitly set practice
+        practice: practiceValue,  // EXPLICITLY include practice
         phone: document.getElementById('newPhone').value,
         address: document.getElementById('newAddress').value,
         city: document.getElementById('newCity').value,
         zip_code: document.getElementById('newZip').value
     };
     
-    // Step 3: Log the complete formData object
-    console.log('FormData object before sending:', JSON.stringify(formData, null, 2));
-    console.log('Practice field specifically:', formData.practice);
-    
-    // Verify practice is not undefined
-    if (formData.practice === undefined) {
-        console.error('ERROR: Practice is undefined!');
-        alert('Error: Practice field is not being captured correctly');
-        return;
-    }
+    console.log('FormData being sent:', JSON.stringify(formData, null, 2));
     
     // Check for manual lat/lng inputs
     const manualLat = document.getElementById('newLatitude').value;
     const manualLng = document.getElementById('newLongitude').value;
     
-    // Build full address for geocoding
-    const fullAddress = `${formData.address}, ${formData.city}, NC ${formData.zip_code}`;
-    
     showLoading();
     
     try {
-        // Use manual coordinates if provided, otherwise geocode
+        // Handle coordinates - but don't let geocoding errors stop us
         if (manualLat && manualLng) {
             formData.latitude = parseFloat(manualLat);
             formData.longitude = parseFloat(manualLng);
+            console.log('Using manual coordinates');
         } else {
-            // Get coordinates from Google Maps
-            const coords = await geocodeAddress(fullAddress);
-            if (coords) {
-                formData.latitude = coords.lat;
-                formData.longitude = coords.lng;
+            // Try to geocode but catch any errors
+            try {
+                const fullAddress = `${formData.address}, ${formData.city}, NC ${formData.zip_code}`;
+                const coords = await geocodeAddress(fullAddress);
+                if (coords) {
+                    formData.latitude = coords.lat;
+                    formData.longitude = coords.lng;
+                    console.log('Geocoding successful');
+                }
+            } catch (geoError) {
+                console.warn('Geocoding failed, continuing without coordinates:', geoError);
+                // Continue without coordinates - don't fail the whole operation
             }
         }
         
-        // Step 4: Log exactly what we're sending to the server
+        // IMPORTANT: Log exactly what we're sending
         const requestBody = JSON.stringify(formData);
-        console.log('Exact request body being sent:', requestBody);
+        console.log('Final request body with practice field:', requestBody);
         
-        // Add doctor
+        // Add doctor to database
         const doctorResponse = await fetch(`${API_URL}/doctors`, {
             method: 'POST',
             headers: {
@@ -1104,7 +1118,6 @@ async function addNewDoctor() {
             body: requestBody
         });
         
-        // Step 5: Log the response
         const responseText = await doctorResponse.text();
         console.log('Raw server response:', responseText);
         
@@ -1113,8 +1126,8 @@ async function addNewDoctor() {
         }
         
         const newDoctor = JSON.parse(responseText);
-        console.log('Parsed doctor object:', newDoctor);
-        console.log('Practice in response:', newDoctor.practice);
+        console.log('New doctor created:', newDoctor);
+        console.log('Practice field in response:', newDoctor.practice || 'NOT FOUND IN RESPONSE');
         
         // Add initial appointment
         const appointmentResponse = await fetch(`${API_URL}/appointments`, {
@@ -1130,22 +1143,19 @@ async function addNewDoctor() {
         
         if (appointmentResponse.ok) {
             document.getElementById('addDoctorMessage').textContent = '✓ Doctor added successfully!';
-            
-            // Don't reset the form immediately so we can inspect values if needed
-            setTimeout(() => {
-                document.getElementById('addDoctorForm').reset();
-                document.getElementById('customSpecialty').style.display = 'none';
-            }, 1000);
+            document.getElementById('addDoctorForm').reset();
+            document.getElementById('customSpecialty').style.display = 'none';
             
             await loadDoctors();
             
             setTimeout(() => {
                 document.getElementById('addDoctorMessage').textContent = '';
+                // Switch back to manage tab
                 switchTab('manage');
             }, 2000);
         }
     } catch (error) {
-        console.error('Error adding doctor:', error);
+        console.error('Error in addNewDoctor:', error);
         alert('Error adding doctor. Check console for details.');
     } finally {
         hideLoading();
