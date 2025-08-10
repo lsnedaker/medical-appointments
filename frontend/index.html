@@ -10,6 +10,7 @@
     <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800;900&display=swap" rel="stylesheet">
     <script src="https://maps.googleapis.com/maps/api/js?key=AIzaSyA-A_px-lTAQxWxobyH3lXfGa2BmkgvZwA&libraries=places"></script>
     <style>
+        
         /* Additional styles for location-based search */
         .location-search-container {
             background: white;
@@ -233,6 +234,69 @@
         .relevance-score.low {
             background: linear-gradient(180deg, #6366f1, #4f46e5);
         }
+/* ADD THE NEW CSS HERE - Discrete radius slider styles */
+        .radius-slider {
+            width: 100%;
+            height: 8px;
+            border-radius: 4px;
+            background: linear-gradient(to right, var(--primary-light) 0%, var(--primary-light) var(--value), #e9ecff var(--value), #e9ecff 100%);
+            outline: none;
+            -webkit-appearance: none;
+            cursor: pointer;
+        }
+        
+        .radius-slider::-webkit-slider-thumb {
+            -webkit-appearance: none;
+            appearance: none;
+            width: 28px;
+            height: 28px;
+            border-radius: 50%;
+            background: var(--primary);
+            cursor: pointer;
+            box-shadow: 0 4px 12px rgba(91, 95, 255, 0.4);
+            transition: all 0.2s ease;
+            border: 3px solid white;
+        }
+        
+        .radius-slider::-webkit-slider-thumb:hover {
+            transform: scale(1.15);
+            box-shadow: 0 6px 20px rgba(91, 95, 255, 0.5);
+        }
+        
+        .radius-slider::-moz-range-thumb {
+            width: 28px;
+            height: 28px;
+            border-radius: 50%;
+            background: var(--primary);
+            cursor: pointer;
+            box-shadow: 0 4px 12px rgba(91, 95, 255, 0.4);
+            border: 3px solid white;
+        }
+        
+        /* Style for discrete steps */
+        .radius-markers {
+            margin-top: 0.75rem;
+            font-size: 0.8rem;
+            color: var(--text-secondary);
+            user-select: none;
+        }
+        
+        .radius-markers span {
+            display: inline-block;
+            position: relative;
+        }
+        
+        /* Add tick marks */
+        .radius-markers span::before {
+            content: '|';
+            position: absolute;
+            top: -18px;
+            left: 50%;
+            transform: translateX(-50%);
+            color: #d1d5db;
+            font-size: 0.7rem;
+        }
+
     </style>
 </head>
 <body>
@@ -288,17 +352,18 @@
     <input type="range" 
            id="radiusSlider" 
            class="radius-slider" 
-           min="5" 
-           max="501" 
-           value="25"
-           step="5"
-           style="--value: 4%;">
-    <div class="radius-markers">
-        <span>5 mi</span>
-        <span>100 mi</span>
-        <span>250 mi</span>
-        <span>500 mi</span>
-        <span>Max</span>
+           min="1" 
+           max="6" 
+           value="2"
+           step="1"
+           style="--value: 20%;">
+    <div class="radius-markers" style="display: grid; grid-template-columns: repeat(6, 1fr); text-align: center;">
+        <span>5mi</span>
+        <span>25mi</span>
+        <span>100mi</span>
+        <span>250mi</span>
+        <span>500mi</span>
+        <span style="font-weight: 700; color: var(--primary);">MAX</span>
     </div>
 </div>
             

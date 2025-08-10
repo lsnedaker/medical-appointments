@@ -45,29 +45,41 @@ function setupEventListeners() {
     });
 }
 
-// Setup radius slider - UPDATED FOR LARGER DISTANCES
+// Setup radius slider - FIXED FOR NATIONWIDE
 function setupRadiusSlider() {
     const slider = document.getElementById('radiusSlider');
     const valueDisplay = document.getElementById('radiusValue');
     
     // Update slider attributes for new range
-    slider.min = '5';
-    slider.max = '501'; // 501 represents "Max"
-    slider.value = '25'; // Default 25 miles
+    // Using special values: 5-500 for miles, 9999 for nationwide
+    slider.min = '1';
+    slider.max = '6'; // 6 positions total
+    slider.value = '2'; // Default position (25 miles)
+    
+    // Define the actual radius values for each position
+    const radiusValues = {
+        '1': 5,
+        '2': 25,
+        '3': 100,
+        '4': 250,
+        '5': 500,
+        '6': 99999 // Nationwide
+    };
     
     slider.addEventListener('input', (e) => {
-        const value = parseInt(e.target.value);
+        const position = e.target.value;
+        const actualRadius = radiusValues[position];
         
-        if (value > 500) {
-            searchRadius = 99999; // Effectively unlimited
-            valueDisplay.textContent = 'Max (Nationwide)';
+        if (actualRadius === 99999) {
+            searchRadius = 99999; // Nationwide
+            valueDisplay.textContent = 'Nationwide (Max)';
         } else {
-            searchRadius = value;
-            valueDisplay.textContent = `${value} miles`;
+            searchRadius = actualRadius;
+            valueDisplay.textContent = `${actualRadius} miles`;
         }
         
         // Update slider fill
-        const percent = ((e.target.value - slider.min) / (slider.max - slider.min)) * 100;
+        const percent = ((position - slider.min) / (slider.max - slider.min)) * 100;
         slider.style.setProperty('--value', `${percent}%`);
         
         // Re-filter if we have results
@@ -78,6 +90,7 @@ function setupRadiusSlider() {
     
     // Set initial value display
     valueDisplay.textContent = '25 miles';
+    searchRadius = 25;
 }
 
 // Load initial data
@@ -366,23 +379,27 @@ function displayResults(doctors) {
     }).join('');
 }
 
-// Update results header - UPDATED FOR MAX RADIUS
+// Update results header - FIXED FOR NATIONWIDE
 function updateResultsHeader(count) {
     const header = document.getElementById('resultsHeader');
     header.style.display = 'block';
     
     document.getElementById('resultCount').textContent = count;
     
-    // Display appropriate radius text
-    if (searchRadius > 9999) {
-        document.getElementById('searchRadius').textContent = 'nationwide';
-        document.getElementById('searchRadius').nextSibling.textContent = ' from ';
-    } else {
-        document.getElementById('searchRadius').textContent = searchRadius;
-        document.getElementById('searchRadius').nextSibling.textContent = ' miles of ';
-    }
+    // Create the location text element if it doesn't exist
+    const searchLocationSpan = document.getElementById('searchLocation');
+    const radiusSpan = document.getElementById('searchRadius');
     
-    document.getElementById('searchLocation').textContent = userLocation.display;
+    // Display appropriate radius text
+    if (searchRadius > 9000) {
+        // For nationwide search
+        radiusSpan.textContent = 'Nationwide';
+        // Update the parent element's text
+        radiusSpan.parentElement.innerHTML = `<span id="resultCount">${count}</span> Appointments Found <span style="font-weight: 600;">Nationwide</span> from <span id="searchLocation">${userLocation.display}</span>`;
+    } else {
+        // For radius-based search
+        radiusSpan.parentElement.innerHTML = `<span id="resultCount">${count}</span> Appointments Found Within <span id="searchRadius">${searchRadius}</span> miles of <span id="searchLocation">${userLocation.display}</span>`;
+    }
 }
 
 // Utility functions
