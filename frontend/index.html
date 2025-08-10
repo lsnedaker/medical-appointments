@@ -3,349 +3,313 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>MedAppoints - Find Nearby Doctor Appointments</title>
+    <title>MedAppoints - Find Medical Practices Near You</title>
     <link rel="stylesheet" href="style.css">
     <link rel="preconnect" href="https://fonts.googleapis.com">
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
     <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800;900&display=swap" rel="stylesheet">
     <script src="https://maps.googleapis.com/maps/api/js?key=AIzaSyA-A_px-lTAQxWxobyH3lXfGa2BmkgvZwA&libraries=places"></script>
     <style>
-        
-        /* Additional styles for location-based search */
-        .location-search-container {
+        /* Practice-centric styles */
+        .practice-card {
             background: white;
-            border-radius: 24px;
-            padding: 2rem;
-            box-shadow: 0 20px 40px rgba(91, 95, 255, 0.15);
-            max-width: 800px;
-            margin: 0 auto;
-        }
-        
-        .location-input-group {
-            display: flex;
-            gap: 1rem;
-            margin-bottom: 1.5rem;
-            flex-wrap: wrap;
-        }
-        
-        .location-input {
-            flex: 1;
-            min-width: 300px;
-            padding: 1rem 1.25rem;
-            border: 2px solid #e9ecff;
-            border-radius: 16px;
-            font-size: 1rem;
+            border-radius: 20px;
+            padding: 1.75rem;
+            box-shadow: 0 4px 12px rgba(0, 0, 0, 0.08);
             transition: all 0.3s ease;
+            position: relative;
+            overflow: hidden;
+            border: 2px solid transparent;
         }
-        
-        .location-input:focus {
-            outline: none;
-            border-color: var(--primary);
-            box-shadow: 0 0 0 4px rgba(91, 95, 255, 0.1);
-        }
-        
-        .use-location-btn {
-            padding: 1rem 1.5rem;
-            background: linear-gradient(135deg, #10b981, #059669);
-            color: white;
-            border: none;
-            border-radius: 16px;
-            font-weight: 600;
-            cursor: pointer;
-            transition: all 0.3s ease;
-            white-space: nowrap;
-        }
-        
-        .use-location-btn:hover {
-            transform: translateY(-2px);
-            box-shadow: 0 8px 20px rgba(16, 185, 129, 0.3);
-        }
-        
-        .radius-control {
-            background: #f8f9ff;
-            border-radius: 16px;
-            padding: 1.5rem;
-            margin-bottom: 1.5rem;
-        }
-        
-        .radius-label {
-            display: flex;
-            justify-content: space-between;
-            align-items: center;
-            margin-bottom: 1rem;
-            font-weight: 600;
-            color: var(--text-primary);
-        }
-        
-        .radius-value {
-            background: var(--primary);
-            color: white;
-            padding: 0.375rem 0.75rem;
-            border-radius: 8px;
-            font-size: 0.875rem;
-        }
-        
-        .radius-slider {
-            width: 100%;
-            height: 8px;
-            border-radius: 4px;
-            background: linear-gradient(to right, var(--primary-light) 0%, var(--primary-light) var(--value), #e9ecff var(--value), #e9ecff 100%);
-            outline: none;
-            -webkit-appearance: none;
-        }
-        
-        .radius-slider::-webkit-slider-thumb {
-            -webkit-appearance: none;
-            appearance: none;
-            width: 24px;
-            height: 24px;
-            border-radius: 50%;
-            background: var(--primary);
-            cursor: pointer;
-            box-shadow: 0 4px 12px rgba(91, 95, 255, 0.3);
-            transition: all 0.2s ease;
-        }
-        
-        .radius-slider::-webkit-slider-thumb:hover {
-            transform: scale(1.2);
-        }
-        
-        .radius-slider::-moz-range-thumb {
-            width: 24px;
-            height: 24px;
-            border-radius: 50%;
-            background: var(--primary);
-            cursor: pointer;
-            box-shadow: 0 4px 12px rgba(91, 95, 255, 0.3);
-            border: none;
-        }
-        
-        .radius-markers {
-            display: flex;
-            justify-content: space-between;
-            margin-top: 0.5rem;
-            font-size: 0.75rem;
-            color: var(--text-secondary);
-        }
-        
-        .sorting-options {
-            display: flex;
-            gap: 1rem;
-            margin-bottom: 1.5rem;
-            flex-wrap: wrap;
-        }
-        
-        .sort-label {
-            font-weight: 600;
-            color: var(--text-secondary);
-            display: flex;
-            align-items: center;
-        }
-        
-        .sort-btn {
-            padding: 0.625rem 1.25rem;
-            background: white;
-            border: 2px solid #e9ecff;
-            border-radius: 12px;
-            font-size: 0.875rem;
-            font-weight: 600;
-            color: var(--text-secondary);
-            cursor: pointer;
-            transition: all 0.2s ease;
-        }
-        
-        .sort-btn:hover {
-            background: var(--bg-hover);
+
+        .practice-card:hover {
+            transform: translateY(-4px);
+            box-shadow: 0 12px 24px rgba(91, 95, 255, 0.15);
             border-color: var(--primary-light);
-            color: var(--primary);
         }
-        
-        .sort-btn.active {
-            background: var(--primary);
-            color: white;
-            border-color: var(--primary);
+
+        .practice-header {
+            margin-bottom: 1.25rem;
+            padding-bottom: 1.25rem;
+            border-bottom: 2px solid #f0f2ff;
         }
-        
-        .location-error {
-            background: #fef2f2;
-            border: 1px solid #fecaca;
-            color: #dc2626;
-            padding: 1rem;
-            border-radius: 12px;
-            margin-bottom: 1rem;
-            display: none;
+
+        .practice-name {
+            font-size: 1.5rem;
+            font-weight: 700;
+            color: var(--text-primary);
+            margin-bottom: 0.5rem;
+            display: flex;
+            align-items: center;
+            gap: 0.75rem;
         }
-        
-        .distance-badge {
+
+        .practice-badge {
             display: inline-flex;
             align-items: center;
             gap: 0.25rem;
             padding: 0.25rem 0.625rem;
-            background: linear-gradient(135deg, #30cfd0, #330867);
+            background: linear-gradient(135deg, #10b981, #059669);
             color: white;
             border-radius: 100px;
             font-size: 0.75rem;
             font-weight: 600;
         }
-        
-        .doctor-card-enhanced {
-            background: white;
-            border-radius: 20px;
-            padding: 1.5rem;
-            box-shadow: 0 4px 12px rgba(0, 0, 0, 0.08);
-            transition: all 0.3s ease;
-            position: relative;
-            overflow: hidden;
+
+        .practice-info {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 1rem;
+            margin-top: 0.75rem;
+            font-size: 0.875rem;
+            color: var(--text-secondary);
         }
-        
-        .doctor-card-enhanced:hover {
-            transform: translateY(-4px);
-            box-shadow: 0 12px 24px rgba(91, 95, 255, 0.15);
+
+        .practice-info-item {
+            display: flex;
+            align-items: center;
+            gap: 0.375rem;
         }
-        
-        .card-top-row {
+
+        .specialties-section {
+            margin-bottom: 1.25rem;
+        }
+
+        .specialties-title {
+            font-size: 0.875rem;
+            font-weight: 600;
+            color: var(--text-secondary);
+            text-transform: uppercase;
+            letter-spacing: 0.05em;
+            margin-bottom: 0.75rem;
+        }
+
+        .specialty-list {
+            display: flex;
+            flex-direction: column;
+            gap: 0.625rem;
+        }
+
+        .specialty-item {
             display: flex;
             justify-content: space-between;
-            align-items: start;
+            align-items: center;
+            padding: 0.875rem;
+            background: #f8f9ff;
+            border-radius: 12px;
+            border: 1px solid #e9ecff;
+            transition: all 0.2s ease;
+        }
+
+        .specialty-item:hover {
+            background: #e9ecff;
+            transform: translateX(4px);
+        }
+
+        .specialty-item.available-today {
+            border-color: #10b981;
+            background: #f0fdf4;
+        }
+
+        .specialty-item.available-soon {
+            border-color: #f59e0b;
+            background: #fffbeb;
+        }
+
+        .specialty-name {
+            font-weight: 600;
+            color: var(--text-primary);
+            font-size: 0.9375rem;
+        }
+
+        .specialty-availability {
+            display: flex;
+            flex-direction: column;
+            align-items: flex-end;
+            gap: 0.25rem;
+        }
+
+        .availability-date {
+            font-weight: 700;
+            color: var(--primary);
+            font-size: 0.9375rem;
+        }
+
+        .availability-relative {
+            font-size: 0.75rem;
+            color: var(--text-secondary);
+            font-weight: 500;
+        }
+
+        .no-availability {
+            color: #6b7280;
+            font-style: italic;
+            font-size: 0.875rem;
+        }
+
+        .doctors-section {
+            margin-bottom: 1.25rem;
+            padding: 0.875rem;
+            background: #fafbff;
+            border-radius: 12px;
+        }
+
+        .doctors-title {
+            font-size: 0.75rem;
+            font-weight: 600;
+            color: var(--text-secondary);
+            text-transform: uppercase;
+            letter-spacing: 0.05em;
+            margin-bottom: 0.5rem;
+        }
+
+        .doctors-list {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 0.5rem;
+        }
+
+        .doctor-tag {
+            padding: 0.375rem 0.625rem;
+            background: white;
+            border: 1px solid #e9ecff;
+            border-radius: 8px;
+            font-size: 0.8125rem;
+            color: var(--text-primary);
+        }
+
+        .practice-footer {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            padding-top: 1.25rem;
+            border-top: 2px solid #f0f2ff;
+        }
+
+        .contact-info {
+            display: flex;
+            flex-direction: column;
+            gap: 0.25rem;
+        }
+
+        .phone-number {
+            font-size: 1.125rem;
+            font-weight: 700;
+            color: var(--primary);
+        }
+
+        .call-practice-btn {
+            padding: 0.875rem 2rem;
+            background: var(--gradient-primary);
+            color: white;
+            border: none;
+            border-radius: 100px;
+            font-size: 0.875rem;
+            font-weight: 700;
+            cursor: pointer;
+            transition: all 0.3s ease;
+            box-shadow: 0 8px 24px rgba(118, 75, 162, 0.3);
+            text-transform: uppercase;
+            letter-spacing: 0.05em;
+        }
+
+        .call-practice-btn:hover {
+            transform: scale(1.05);
+            box-shadow: 0 12px 32px rgba(118, 75, 162, 0.4);
+        }
+
+        .distance-badge {
+            position: absolute;
+            top: 1.25rem;
+            right: 1.25rem;
+            display: inline-flex;
+            align-items: center;
+            gap: 0.25rem;
+            padding: 0.375rem 0.75rem;
+            background: linear-gradient(135deg, #6366f1, #4f46e5);
+            color: white;
+            border-radius: 100px;
+            font-size: 0.8125rem;
+            font-weight: 600;
+            box-shadow: 0 4px 12px rgba(99, 102, 241, 0.3);
+        }
+
+        /* Filter pills for specialties */
+        .specialty-filter-pills {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 0.5rem;
+            margin-bottom: 1.5rem;
+        }
+
+        .specialty-pill {
+            padding: 0.5rem 1rem;
+            background: white;
+            border: 2px solid #e9ecff;
+            border-radius: 100px;
+            font-size: 0.875rem;
+            font-weight: 600;
+            color: var(--text-secondary);
+            cursor: pointer;
+            transition: all 0.2s ease;
+        }
+
+        .specialty-pill:hover {
+            background: var(--bg-hover);
+            border-color: var(--primary-light);
+            color: var(--primary);
+        }
+
+        .specialty-pill.active {
+            background: var(--gradient-primary);
+            color: white;
+            border-color: transparent;
+        }
+
+        /* Loading and empty states */
+        .loading-state {
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+            padding: 3rem;
+            text-align: center;
+        }
+
+        .loading-state.hidden {
+            display: none !important;
+        }
+
+        .loading-spinner {
+            width: 50px;
+            height: 50px;
+            border: 4px solid #e9ecff;
+            border-top-color: var(--primary);
+            border-radius: 50%;
+            animation: spin 1s linear infinite;
             margin-bottom: 1rem;
         }
-        
-        .doctor-main-info {
-            flex: 1;
+
+        @keyframes spin {
+            0% { transform: rotate(0deg); }
+            100% { transform: rotate(360deg); }
         }
-        
-        .distance-availability {
-            text-align: right;
-        }
-        
-        .relevance-score {
-            position: absolute;
-            top: 0;
-            left: 0;
-            width: 4px;
-            height: 100%;
-            background: linear-gradient(180deg, #10b981, #059669);
-        }
-        
-        .relevance-score.medium {
-            background: linear-gradient(180deg, #f59e0b, #d97706);
-        }
-        
-        .relevance-score.low {
-            background: linear-gradient(180deg, #6366f1, #4f46e5);
-        }
-/* ADD THE NEW CSS HERE - Discrete radius slider styles */
-        .radius-slider {
-            width: 100%;
-            height: 8px;
-            border-radius: 4px;
-            background: linear-gradient(to right, var(--primary-light) 0%, var(--primary-light) var(--value), #e9ecff var(--value), #e9ecff 100%);
-            outline: none;
-            -webkit-appearance: none;
-            cursor: pointer;
-        }
-        
-        .radius-slider::-webkit-slider-thumb {
-            -webkit-appearance: none;
-            appearance: none;
-            width: 28px;
-            height: 28px;
-            border-radius: 50%;
-            background: var(--primary);
-            cursor: pointer;
-            box-shadow: 0 4px 12px rgba(91, 95, 255, 0.4);
-            transition: all 0.2s ease;
-            border: 3px solid white;
-        }
-        
-        .radius-slider::-webkit-slider-thumb:hover {
-            transform: scale(1.15);
-            box-shadow: 0 6px 20px rgba(91, 95, 255, 0.5);
-        }
-        
-        .radius-slider::-moz-range-thumb {
-            width: 28px;
-            height: 28px;
-            border-radius: 50%;
-            background: var(--primary);
-            cursor: pointer;
-            box-shadow: 0 4px 12px rgba(91, 95, 255, 0.4);
-            border: 3px solid white;
-        }
-        
-        /* Style for discrete steps */
-        .radius-markers {
-            margin-top: 0.75rem;
-            font-size: 0.8rem;
+
+        .empty-state {
+            text-align: center;
+            padding: 3rem;
             color: var(--text-secondary);
-            user-select: none;
         }
-        
-        .radius-markers span {
-            display: inline-block;
-            position: relative;
+
+        .empty-state.hidden {
+            display: none !important;
         }
-        
-        /* Add tick marks */
-        .radius-markers span::before {
-            content: '|';
-            position: absolute;
-            top: -18px;
-            left: 50%;
-            transform: translateX(-50%);
-            color: #d1d5db;
-            font-size: 0.7rem;
+
+        .empty-state h3 {
+            font-size: 1.25rem;
+            margin-bottom: 0.5rem;
+            color: var(--text-primary);
         }
-/* Add this CSS to your index.html <style> section or style.css file */
-
-/* Loading state styles */
-.loading-state {
-    display: flex;
-    flex-direction: column;
-    align-items: center;
-    justify-content: center;
-    padding: 3rem;
-    text-align: center;
-}
-
-.loading-state.hidden {
-    display: none !important; /* Force hide with important */
-}
-
-.loading-spinner {
-    width: 50px;
-    height: 50px;
-    border: 4px solid #e9ecff;
-    border-top-color: var(--primary, #5b5fff);
-    border-radius: 50%;
-    animation: spin 1s linear infinite;
-    margin-bottom: 1rem;
-}
-
-@keyframes spin {
-    0% { transform: rotate(0deg); }
-    100% { transform: rotate(360deg); }
-}
-
-.empty-state {
-    text-align: center;
-    padding: 3rem;
-    color: var(--text-secondary);
-}
-
-.empty-state.hidden {
-    display: none !important;
-}
-
-.empty-state h3 {
-    font-size: 1.25rem;
-    margin-bottom: 0.5rem;
-    color: var(--text-primary);
-}
-
-.empty-state p {
-    font-size: 0.95rem;
-}
     </style>
 </head>
 <body>
@@ -354,7 +318,7 @@
         <div class="nav-wrapper">
             <div class="nav-brand">
                 <span class="brand-text">MedAppoints</span>
-                <span class="brand-badge">LOCATION</span>
+                <span class="brand-badge">PRACTICES</span>
             </div>
             <div class="nav-status">
                 <span class="status-dot"></span>
@@ -367,10 +331,10 @@
     <section class="hero-simple">
         <div class="hero-content-simple">
             <h1 class="hero-title-simple">
-                Find Doctor Appointments <span class="text-accent">Near You</span>
+                Find Medical Practices <span class="text-accent">Near You</span>
             </h1>
             <p class="hero-subtitle-simple">
-                Enter your location and search radius to find the closest available appointments
+                Search for practices by location and see availability for all specialties
             </p>
         </div>
     </section>
@@ -392,217 +356,43 @@
                 </button>
             </div>
             
-          <!-- Radius Slider -->
-<div class="radius-control">
-    <div class="radius-label">
-        <span>Search Radius</span>
-        <span class="radius-value" id="radiusValue">25 miles</span>
-    </div>
-    <div class="slider-container" style="position: relative; padding: 0 14px; margin-top: 1rem;">
-        <!-- Custom track and fill -->
-        <div class="slider-track">
-            <div class="slider-fill" style="width: 20%;"></div>
-        </div>
-        <!-- Actual slider input -->
-        <input type="range" 
-               id="radiusSlider" 
-               class="radius-slider" 
-               min="1" 
-               max="6" 
-               value="2"
-               step="1">
-        <!-- Markers -->
-        <div class="radius-markers">
-            <span data-position="0">5mi</span>
-            <span data-position="20">25mi</span>
-            <span data-position="40">100mi</span>
-            <span data-position="60">250mi</span>
-            <span data-position="80">500mi</span>
-            <span data-position="100" style="font-weight: 700; color: var(--primary);">MAX</span>
-        </div>
-    </div>
-</div>
-
-<!-- Updated CSS for perfect alignment -->
-<style>
-    .radius-control {
-        background: #f8f9ff;
-        border-radius: 16px;
-        padding: 1.5rem;
-        margin-bottom: 1.5rem;
-    }
-    
-    .radius-label {
-        display: flex;
-        justify-content: space-between;
-        align-items: center;
-        margin-bottom: 1rem;
-        font-weight: 600;
-        color: var(--text-primary);
-    }
-    
-    .radius-value {
-        background: var(--primary);
-        color: white;
-        padding: 0.375rem 0.75rem;
-        border-radius: 8px;
-        font-size: 0.875rem;
-    }
-    
-    .slider-container {
-        position: relative;
-        padding: 0 14px;
-        margin-top: 1rem;
-    }
-    
-    /* Create custom track with JavaScript-controlled fill */
-    .slider-track {
-        position: absolute;
-        top: 50%;
-        left: 14px;
-        right: 14px;
-        height: 8px;
-        background: #e9ecff;
-        border-radius: 4px;
-        transform: translateY(-50%);
-        pointer-events: none;
-    }
-    
-    .slider-fill {
-        position: absolute;
-        top: 0;
-        left: 0;
-        height: 100%;
-        background: var(--primary, #5b5fff);
-        border-radius: 4px;
-        transition: width 0.2s ease;
-        width: var(--progress, 20%);
-    }
-    
-    .radius-slider {
-        position: relative;
-        width: 100%;
-        height: 8px;
-        background: transparent;
-        outline: none;
-        -webkit-appearance: none;
-        appearance: none;
-        cursor: pointer;
-        margin: 0;
-        z-index: 2;
-    }
-    
-    /* Make the track transparent since we're using custom track */
-    .radius-slider::-webkit-slider-runnable-track {
-        background: transparent;
-        height: 8px;
-    }
-    
-    .radius-slider::-moz-range-track {
-        background: transparent;
-        height: 8px;
-    }
-    
-    .radius-slider::-webkit-slider-thumb {
-        -webkit-appearance: none;
-        appearance: none;
-        width: 28px;
-        height: 28px;
-        border-radius: 50%;
-        background: var(--primary, #5b5fff);
-        cursor: pointer;
-        box-shadow: 0 4px 12px rgba(91, 95, 255, 0.4);
-        border: 3px solid white;
-        position: relative;
-        z-index: 3;
-    }
-    
-    .radius-slider::-webkit-slider-thumb:hover {
-        transform: scale(1.15);
-        box-shadow: 0 6px 20px rgba(91, 95, 255, 0.5);
-    }
-    
-    .radius-slider::-moz-range-thumb {
-        width: 28px;
-        height: 28px;
-        border-radius: 50%;
-        background: var(--primary, #5b5fff);
-        cursor: pointer;
-        box-shadow: 0 4px 12px rgba(91, 95, 255, 0.4);
-        border: 3px solid white;
-        position: relative;
-        z-index: 3;
-        border: none;
-    }
-    
-    .radius-slider::-moz-range-thumb:hover {
-        transform: scale(1.15);
-        box-shadow: 0 6px 20px rgba(91, 95, 255, 0.5);
-    }
-    
-    /* Markers positioning */
-    .radius-markers {
-        display: flex;
-        justify-content: space-between;
-        margin-top: 1rem;
-        font-size: 0.8rem;
-        color: var(--text-secondary);
-        user-select: none;
-        position: relative;
-    }
-    
-    .radius-markers span {
-        position: absolute;
-        transform: translateX(-50%);
-        text-align: center;
-        white-space: nowrap;
-    }
-    
-    /* Position each marker precisely */
-    .radius-markers span[data-position="0"] { left: 0%; transform: translateX(0); }
-    .radius-markers span[data-position="20"] { left: 20%; }
-    .radius-markers span[data-position="40"] { left: 40%; }
-    .radius-markers span[data-position="60"] { left: 60%; }
-    .radius-markers span[data-position="80"] { left: 80%; }
-    .radius-markers span[data-position="100"] { left: 100%; transform: translateX(-100%); }
-    
-    /* Individual tick marks */
-    .radius-markers span::before {
-        content: '|';
-        position: absolute;
-        top: -20px;
-        left: 50%;
-        transform: translateX(-50%);
-        color: #d1d5db;
-        font-size: 0.7rem;
-        line-height: 1;
-    }
-    
-</style>
-
+            <!-- Radius Slider -->
+            <div class="radius-control">
+                <div class="radius-label">
+                    <span>Search Radius</span>
+                    <span class="radius-value" id="radiusValue">25 miles</span>
+                </div>
+                <div class="slider-container" style="position: relative; padding: 0 14px; margin-top: 1rem;">
+                    <div class="slider-track">
+                        <div class="slider-fill" style="width: 20%;"></div>
+                    </div>
+                    <input type="range" 
+                           id="radiusSlider" 
+                           class="radius-slider" 
+                           min="1" 
+                           max="6" 
+                           value="2"
+                           step="1">
+                    <div class="radius-markers">
+                        <span data-position="0">5mi</span>
+                        <span data-position="20">25mi</span>
+                        <span data-position="40">100mi</span>
+                        <span data-position="60">250mi</span>
+                        <span data-position="80">500mi</span>
+                        <span data-position="100" style="font-weight: 700; color: var(--primary);">MAX</span>
+                    </div>
+                </div>
+            </div>
             
-            <!-- Specialty Filter -->
+            <!-- Specialty Filter Pills -->
             <div style="margin-bottom: 1.5rem;">
-                <label style="font-weight: 600; color: var(--text-secondary); display: block; margin-bottom: 0.5rem;">
+                <label style="font-weight: 600; color: var(--text-secondary); display: block; margin-bottom: 0.75rem;">
                     Filter by Specialty (Optional)
                 </label>
-                <select id="specialtySelect" class="search-select" style="width: 100%; padding: 0.875rem; border: 2px solid #e9ecff; border-radius: 12px;">
-                    <option value="">All Specialties</option>
-                    <option value="primary-care">Primary Care</option>
-                    <option value="cardiology">Cardiology</option>
-                    <option value="dermatology">Dermatology</option>
-                    <option value="endocrinology">Endocrinology</option>
-                    <option value="ent">ENT</option>
-                    <option value="nephrology">Nephrology</option>
-                    <option value="neurology">Neurology</option>
-                    <option value="obgyn">OB/GYN</option>
-                    <option value="ophthalmology">Ophthalmology</option>
-                    <option value="orthopedics">Orthopedics</option>
-                    <option value="pediatrics">Pediatrics</option>
-                    <option value="psychiatry">Psychiatry</option>
-                    <option value="pulmonology">Pulmonology</option>
-                    <option value="rheumatology">Rheumatology</option>
-                </select>
+                <div class="specialty-filter-pills" id="specialtyFilters">
+                    <button class="specialty-pill active" data-specialty="">All Specialties</button>
+                    <!-- Pills will be dynamically added here -->
+                </div>
             </div>
             
             <!-- Sorting Options -->
@@ -610,12 +400,12 @@
                 <span class="sort-label">Sort by:</span>
                 <button class="sort-btn active" data-sort="balanced">Best Match</button>
                 <button class="sort-btn" data-sort="distance">Closest First</button>
-                <button class="sort-btn" data-sort="availability">Soonest First</button>
+                <button class="sort-btn" data-sort="soonest">Soonest Available</button>
             </div>
             
             <!-- Search Button -->
             <button id="searchBtn" class="search-button" style="width: 100%;">
-                Search for Appointments
+                Search for Practices
             </button>
         </div>
     </section>
@@ -626,17 +416,17 @@
             <!-- Results Header -->
             <div id="resultsHeader" style="display: none; margin-bottom: 1.5rem;">
                 <h2 style="font-size: 1.5rem; font-weight: 700; color: var(--text-primary);">
-                    <span id="resultCount">0</span> Appointments Found
+                    <span id="resultCount">0</span> Practices Found
                 </h2>
                 <p style="color: var(--text-secondary); margin-top: 0.25rem;">
-                    Within <span id="searchRadius">0</span> miles of <span id="searchLocation">your location</span>
+                    <span id="searchDescription">Within 25 miles of your location</span>
                 </p>
             </div>
             
             <!-- Loading State -->
             <div id="loadingState" class="loading-state hidden">
                 <div class="loading-spinner"></div>
-                <p>Searching for appointments near you...</p>
+                <p>Searching for medical practices near you...</p>
             </div>
 
             <!-- Results Grid -->
@@ -644,37 +434,34 @@
 
             <!-- Empty State -->
             <div id="emptyState" class="empty-state hidden">
-                <h3>No appointments found</h3>
-                <p>Try increasing your search radius or removing filters</p>
+                <h3>No practices found</h3>
+                <p>Try increasing your search radius or removing specialty filters</p>
             </div>
         </div>
     </main>
 
     <!-- Footer -->
-<footer class="footer">
-    <div class="footer-content">
-        <p>© 2024 MedAppoints • For informational purposes only</p>
-        <p>Location-based search for medical appointments</p>
-        <!-- Admin link removed for security -->
-    </div>
-</footer>
+    <footer class="footer">
+        <div class="footer-content">
+            <p>© 2024 MedAppoints • For informational purposes only</p>
+            <p>Practice-based medical appointment finder for Eastern NC</p>
+        </div>
+    </footer>
 
-    <script src="script-location.js"></script>
-    <!-- Add this secret keyboard shortcut for admin access (optional) -->
-<script>
-    // Secret keyboard shortcut for admin access (Ctrl+Shift+A)
-    let keys = {};
-    document.addEventListener('keydown', (e) => {
-        keys[e.key] = true;
-        if (keys['Control'] && keys['Shift'] && keys['A']) {
-            // Silently navigate to admin page
-            window.location.href = 'admin-enhanced.html';
-        }
-    });
-    document.addEventListener('keyup', (e) => {
-        delete keys[e.key];
-    });
-</script>
-
+    <script src="script-practices.js"></script>
+    
+    <!-- Secret keyboard shortcut for admin access -->
+    <script>
+        let keys = {};
+        document.addEventListener('keydown', (e) => {
+            keys[e.key] = true;
+            if (keys['Control'] && keys['Shift'] && keys['A']) {
+                window.location.href = 'admin-practices.html';
+            }
+        });
+        document.addEventListener('keyup', (e) => {
+            delete keys[e.key];
+        });
+    </script>
 </body>
 </html>
