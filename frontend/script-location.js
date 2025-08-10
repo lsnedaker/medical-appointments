@@ -104,6 +104,89 @@ function getUserLocation() {
     );
 }
 
+// ADD THIS FUNCTION - Define zip code coordinates for Eastern NC
+function getZipCodeCoordinates(zipCode) {
+    // Eastern NC zip codes with their coordinates and city names
+    const zipCodes = {
+        // Carteret County
+        '28557': { lat: 34.7227, lng: -76.8583, city: 'Morehead City' },
+        '28516': { lat: 34.7649, lng: -76.8188, city: 'Beaufort' },
+        '28570': { lat: 34.7804, lng: -76.8480, city: 'Newport' },
+        '28531': { lat: 34.7785, lng: -76.6216, city: 'Harkers Island' },
+        '28511': { lat: 34.6879, lng: -76.5713, city: 'Atlantic' },
+        '28520': { lat: 34.9082, lng: -76.6866, city: 'Cedar Point' },
+        '28528': { lat: 34.8965, lng: -76.5516, city: 'Gloucester' },
+        '28581': { lat: 34.8696, lng: -76.5666, city: 'Smyrna' },
+        '28594': { lat: 34.6601, lng: -76.5260, city: 'Sea Level' },
+        
+        // Craven County
+        '28532': { lat: 34.9021, lng: -77.0330, city: 'Havelock' },
+        '28560': { lat: 35.1085, lng: -77.0441, city: 'New Bern' },
+        '28561': { lat: 35.1085, lng: -77.0441, city: 'New Bern' },
+        '28562': { lat: 35.1085, lng: -77.0441, city: 'New Bern' },
+        '28563': { lat: 35.1085, lng: -77.0441, city: 'New Bern' },
+        '28564': { lat: 35.1085, lng: -77.0441, city: 'New Bern' },
+        
+        // Onslow County
+        '28540': { lat: 34.7540, lng: -77.4019, city: 'Jacksonville' },
+        '28544': { lat: 34.6583, lng: -77.4560, city: 'Camp Lejeune' },
+        '28546': { lat: 34.7540, lng: -77.4019, city: 'Jacksonville' },
+        '28547': { lat: 34.7226, lng: -77.2305, city: 'Camp Lejeune' },
+        '28584': { lat: 34.5780, lng: -77.3172, city: 'Swansboro' },
+        '28539': { lat: 34.5780, lng: -77.3172, city: 'Hubert' },
+        '28574': { lat: 34.9079, lng: -77.2338, city: 'Richlands' },
+        '28585': { lat: 34.7061, lng: -77.1241, city: 'Sneads Ferry' },
+        
+        // Pender County
+        '28443': { lat: 34.5516, lng: -77.8830, city: 'Hampstead' },
+        '28445': { lat: 34.2268, lng: -77.8664, city: 'Holly Ridge' },
+        '28457': { lat: 34.4579, lng: -77.5538, city: 'Maple Hill' },
+        '28460': { lat: 34.3718, lng: -77.7563, city: 'Rocky Point' },
+        '28464': { lat: 34.5710, lng: -77.8358, city: 'Surf City' },
+        '28478': { lat: 34.5379, lng: -78.2736, city: 'Wallace' },
+        
+        // Jones County
+        '28571': { lat: 35.0048, lng: -77.3520, city: 'Pollocksville' },
+        '28580': { lat: 34.9965, lng: -77.5811, city: 'Trenton' },
+        '28526': { lat: 34.8532, lng: -77.4463, city: 'Maysville' },
+        
+        // Pamlico County
+        '28571': { lat: 35.0048, lng: -77.3520, city: 'Oriental' },
+        '28510': { lat: 35.2057, lng: -76.6977, city: 'Arapahoe' },
+        '28515': { lat: 35.1816, lng: -76.6196, city: 'Bayboro' },
+        '28529': { lat: 35.1465, lng: -76.8008, city: 'Grantsboro' },
+        '28552': { lat: 35.0343, lng: -76.6238, city: 'Oriental' },
+        '28555': { lat: 35.0879, lng: -76.7274, city: 'Minnesott Beach' },
+        '28587': { lat: 35.2679, lng: -76.5710, city: 'Stonewall' },
+        '28589': { lat: 35.3607, lng: -76.5952, city: 'Vandemere' },
+        
+        // Lenoir County
+        '28501': { lat: 35.2730, lng: -77.5814, city: 'Kinston' },
+        '28502': { lat: 35.2730, lng: -77.5814, city: 'Kinston' },
+        '28503': { lat: 35.2730, lng: -77.5814, city: 'Kinston' },
+        '28504': { lat: 35.2730, lng: -77.5814, city: 'Kinston' },
+        '28523': { lat: 35.1454, lng: -77.8647, city: 'Deep Run' },
+        '28538': { lat: 35.3765, lng: -77.7083, city: 'Hookerton' },
+        '28543': { lat: 35.4051, lng: -77.5861, city: 'La Grange' },
+        '28572': { lat: 35.2121, lng: -77.7552, city: 'Pink Hill' },
+        
+        // Duplin County
+        '28518': { lat: 34.9957, lng: -78.0542, city: 'Beulaville' },
+        '28525': { lat: 35.0524, lng: -77.9061, city: 'Faison' },
+        '28365': { lat: 35.1341, lng: -78.1897, city: 'Mount Olive' },
+        '28349': { lat: 34.8366, lng: -77.9408, city: 'Kenansville' },
+        '28466': { lat: 35.0057, lng: -78.3164, city: 'Rose Hill' },
+        '28453': { lat: 34.7366, lng: -78.1808, city: 'Magnolia' },
+        '28398': { lat: 35.1957, lng: -78.1033, city: 'Warsaw' },
+        '28327': { lat: 35.0168, lng: -78.0039, city: 'Calypso' },
+        '28341': { lat: 34.9693, lng: -77.9436, city: 'Greenevers' },
+        '28444': { lat: 34.8321, lng: -78.0239, city: 'Chinquapin' },
+        '28435': { lat: 34.7360, lng: -78.0344, city: 'Teachey' }
+    };
+    
+    return zipCodes[zipCode] || null;
+}
+
 // Perform search based on entered location
 async function performSearch() {
     const locationInput = document.getElementById('locationInput').value.trim();
@@ -113,9 +196,18 @@ async function performSearch() {
         return;
     }
     
+    // Don't reset the location if we already have one and the input hasn't changed
+    if (userLocation && 
+        (locationInput === 'Current Location' || 
+         locationInput === userLocation.display)) {
+        // Just re-filter with existing location
+        filterAndDisplay();
+        return;
+    }
+    
     showLoading();
     
-    // Check if it's a zip code
+    // Check if it's a zip code (5 digits)
     if (/^\d{5}$/.test(locationInput)) {
         // Handle zip code
         const coords = getZipCodeCoordinates(locationInput);
@@ -123,20 +215,19 @@ async function performSearch() {
             userLocation = {
                 lat: coords.lat,
                 lng: coords.lng,
-                display: `${locationInput} (${coords.city})`
+                display: `${coords.city}, NC ${locationInput}`
             };
             hideError();
             filterAndDisplay();
         } else {
-            hideLoading();
-            showError('Zip code not found in our coverage area');
+            // If zip code not in our list, try geocoding it
+            await geocodeAddress(locationInput);
         }
     } else {
         // Try to geocode the address
         await geocodeAddress(locationInput);
     }
 }
-
 
 // Geocode address using Google Maps API
 async function geocodeAddress(address) {
@@ -160,7 +251,7 @@ async function geocodeAddress(address) {
                 filterAndDisplay();
             } else {
                 hideLoading();
-                showError('Location not found. Please try a different address.');
+                showError('Location not found. Please try a different address or zip code.');
             }
             resolve();
         });
@@ -173,30 +264,29 @@ function filterAndDisplay() {
     
     showLoading();
     
-   // In filterAndDisplay function, update the distance calculation:
-const doctorsWithDistance = allDoctors.map(doctor => {
-    // Skip doctors without coordinates
-    if (!doctor.latitude || !doctor.longitude) {
+    const doctorsWithDistance = allDoctors.map(doctor => {
+        // Skip doctors without coordinates
+        if (!doctor.latitude || !doctor.longitude) {
+            return {
+                ...doctor,
+                distance: 999, // Put at end if no coordinates
+                daysUntil: getDaysUntilAppointment(doctor.next_available)
+            };
+        }
+        
+        const distance = calculateDistance(
+            userLocation.lat,
+            userLocation.lng,
+            doctor.latitude,
+            doctor.longitude
+        );
+        
         return {
             ...doctor,
-            distance: 999, // Put at end if no coordinates
+            distance: distance,
             daysUntil: getDaysUntilAppointment(doctor.next_available)
         };
-    }
-    
-    const distance = calculateDistance(
-        userLocation.lat,
-        userLocation.lng,
-        doctor.latitude,
-        doctor.longitude
-    );
-    
-    return {
-        ...doctor,
-        distance: distance,
-        daysUntil: getDaysUntilAppointment(doctor.next_available)
-    };
-});
+    });
     
     // Filter by radius
     let filteredDoctors = doctorsWithDistance.filter(doc => doc.distance <= searchRadius);
@@ -257,8 +347,6 @@ function calculateDistance(lat1, lon1, lat2, lon2) {
 function toRad(deg) {
     return deg * (Math.PI / 180);
 }
-
-
 
 // Display results
 function displayResults(doctors) {
