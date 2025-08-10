@@ -46,9 +46,11 @@ function setupEventListeners() {
 }
 
 // Setup radius slider - FIXED FOR PERFECT ALIGNMENT
+// Setup radius slider - FIXED WITH CUSTOM TRACK FOR PERFECT CENTERING
 function setupRadiusSlider() {
     const slider = document.getElementById('radiusSlider');
     const valueDisplay = document.getElementById('radiusValue');
+    const sliderFill = document.querySelector('.slider-fill');
     
     // Define the actual radius values for each position
     const radiusValues = {
@@ -76,8 +78,10 @@ function setupRadiusSlider() {
         const actualRadius = radiusValues[position];
         const percentage = stepPercentages[position];
         
-        // Update the progress fill
-        slider.style.setProperty('--progress', `${percentage}%`);
+        // Update the custom fill track width
+        if (sliderFill) {
+            sliderFill.style.width = `${percentage}%`;
+        }
         
         // Update the display text
         if (actualRadius === 99999) {
@@ -90,6 +94,9 @@ function setupRadiusSlider() {
     }
     
     // Initialize
+    slider.min = '1';
+    slider.max = '6';
+    slider.value = '2'; // Default to 25 miles
     updateSlider();
     
     // Handle slider input
@@ -111,6 +118,9 @@ function setupRadiusSlider() {
             updateSlider();
         }
     });
+    
+    // Set initial state
+    searchRadius = 25;
 }
 
 // Load initial data
