@@ -798,6 +798,43 @@ function displayDoctors(doctors) {
     `;
     }).join('');
 }
+// BACKEND CHECK - Add this function to verify what the backend is receiving
+async function testPracticeField() {
+    const testData = {
+        name: "Test Doctor",
+        specialty: "primary-care",
+        practice: "Test Practice Name",
+        phone: "(252) 555-9999",
+        address: "123 Test St",
+        city: "Morehead City",
+        zip_code: "28557"
+    };
+    
+    console.log('Testing with data:', testData);
+    
+    try {
+        const response = await fetch(`${API_URL}/doctors`, {
+            method: 'POST',
+            headers: {
+                'Content-Type': 'application/json',
+            },
+            body: JSON.stringify(testData)
+        });
+        
+        const result = await response.json();
+        console.log('Test result:', result);
+        
+        if (result.practice) {
+            console.log('✓ Practice field is being saved correctly');
+        } else {
+            console.log('✗ Practice field is NOT being saved - check backend');
+        }
+    } catch (error) {
+        console.error('Test failed:', error);
+    }
+}
+
+// You can run this in the console to test: testPracticeField()
         
         // Filter doctors
         function filterDoctors() {
@@ -975,8 +1012,26 @@ document.getElementById('editDoctorForm').addEventListener('submit', async (e) =
         hideLoading();
     }
 });
-        // FIXED addNewDoctor function - Replace the existing addNewDoctor function with this one
+  // ============================================
+// DEBUGGING VERSION - Replace your addNewDoctor function with this
+// This will help us identify exactly where the practice value is getting lost
+// ============================================
+
 async function addNewDoctor() {
+    console.log('=== START ADD NEW DOCTOR ===');
+    
+    // Step 1: Check if the form element exists and has the right ID
+    const practiceInput = document.getElementById('newPractice');
+    console.log('Practice input element:', practiceInput);
+    console.log('Practice input value:', practiceInput ? practiceInput.value : 'ELEMENT NOT FOUND');
+    
+    // Let's also check the form to make sure all elements are there
+    console.log('All form elements:');
+    console.log('- Name input:', document.getElementById('newName'));
+    console.log('- Specialty input:', document.getElementById('newSpecialty'));
+    console.log('- Practice input:', document.getElementById('newPractice'));
+    console.log('- Phone input:', document.getElementById('newPhone'));
+    
     const specialtyValue = getSpecialtyValue();
     const customSpecialtyInput = document.getElementById('customSpecialty');
     
@@ -989,21 +1044,29 @@ async function addNewDoctor() {
         addCustomSpecialtyToDropdowns(specialtyValue, displayName);
     }
     
-    // Get the practice value explicitly
+    // Step 2: Build the form data object with explicit practice field
     const practiceValue = document.getElementById('newPractice').value;
     
     const formData = {
         name: document.getElementById('newName').value,
         specialty: specialtyValue,
-        practice: practiceValue, // Ensure practice is included
+        practice: practiceValue,  // Explicitly set practice
         phone: document.getElementById('newPhone').value,
         address: document.getElementById('newAddress').value,
         city: document.getElementById('newCity').value,
         zip_code: document.getElementById('newZip').value
     };
     
-    // Log the data being sent for debugging
-    console.log('Sending doctor data:', formData);
+    // Step 3: Log the complete formData object
+    console.log('FormData object before sending:', JSON.stringify(formData, null, 2));
+    console.log('Practice field specifically:', formData.practice);
+    
+    // Verify practice is not undefined
+    if (formData.practice === undefined) {
+        console.error('ERROR: Practice is undefined!');
+        alert('Error: Practice field is not being captured correctly');
+        return;
+    }
     
     // Check for manual lat/lng inputs
     const manualLat = document.getElementById('newLatitude').value;
@@ -1019,18 +1082,18 @@ async function addNewDoctor() {
         if (manualLat && manualLng) {
             formData.latitude = parseFloat(manualLat);
             formData.longitude = parseFloat(manualLng);
-            console.log('Using manual coordinates:', { lat: formData.latitude, lng: formData.longitude });
         } else {
             // Get coordinates from Google Maps
             const coords = await geocodeAddress(fullAddress);
             if (coords) {
                 formData.latitude = coords.lat;
                 formData.longitude = coords.lng;
-                console.log(`Geocoded ${fullAddress} to:`, coords);
-            } else {
-                console.warn('Could not geocode address, using city defaults');
             }
         }
+        
+        // Step 4: Log exactly what we're sending to the server
+        const requestBody = JSON.stringify(formData);
+        console.log('Exact request body being sent:', requestBody);
         
         // Add doctor
         const doctorResponse = await fetch(`${API_URL}/doctors`, {
@@ -1038,17 +1101,20 @@ async function addNewDoctor() {
             headers: {
                 'Content-Type': 'application/json',
             },
-            body: JSON.stringify(formData)
+            body: requestBody
         });
         
+        // Step 5: Log the response
+        const responseText = await doctorResponse.text();
+        console.log('Raw server response:', responseText);
+        
         if (!doctorResponse.ok) {
-            const errorText = await doctorResponse.text();
-            console.error('Server response:', errorText);
-            throw new Error('Failed to add doctor');
+            throw new Error('Failed to add doctor: ' + responseText);
         }
         
-        const newDoctor = await doctorResponse.json();
-        console.log('Doctor added successfully:', newDoctor);
+        const newDoctor = JSON.parse(responseText);
+        console.log('Parsed doctor object:', newDoctor);
+        console.log('Practice in response:', newDoctor.practice);
         
         // Add initial appointment
         const appointmentResponse = await fetch(`${API_URL}/appointments`, {
@@ -1064,8 +1130,12 @@ async function addNewDoctor() {
         
         if (appointmentResponse.ok) {
             document.getElementById('addDoctorMessage').textContent = '✓ Doctor added successfully!';
-            document.getElementById('addDoctorForm').reset();
-            document.getElementById('customSpecialty').style.display = 'none';
+            
+            // Don't reset the form immediately so we can inspect values if needed
+            setTimeout(() => {
+                document.getElementById('addDoctorForm').reset();
+                document.getElementById('customSpecialty').style.display = 'none';
+            }, 1000);
             
             await loadDoctors();
             
@@ -1076,11 +1146,123 @@ async function addNewDoctor() {
         }
     } catch (error) {
         console.error('Error adding doctor:', error);
-        alert('Error adding doctor. Please check the console for details and try again.');
+        alert('Error adding doctor. Check console for details.');
     } finally {
         hideLoading();
     }
+    
+    console.log('=== END ADD NEW DOCTOR ===');
 }
+
+// ============================================
+// ADDITIONAL TEST FUNCTION
+// Run this in console to test the backend directly
+// ============================================
+
+async function testBackendDirectly() {
+    console.log('Testing backend directly with practice field...');
+    
+    const testData = {
+        name: "Test Doctor " + Date.now(),
+        specialty: "primary-care",
+        practice: "Test Practice Name " + Date.now(),
+        phone: "(252) 555-" + Math.floor(Math.random() * 9000 + 1000),
+        address: "123 Test Street",
+        city: "Morehead City",
+        zip_code: "28557"
+    };
+    
+    console.log('Sending test data:', testData);
+    
+    try {
+        const response = await fetch(`${API_URL}/doctors`, {
+            method: 'POST',
+            headers: {
+                'Content-Type': 'application/json',
+            },
+            body: JSON.stringify(testData)
+        });
+        
+        const result = await response.json();
+        console.log('Backend response:', result);
+        
+        if (result.practice === testData.practice) {
+            console.log('✅ SUCCESS: Practice field is working correctly!');
+            console.log('The issue must be in the form data collection.');
+        } else {
+            console.log('❌ PROBLEM: Practice field not saved correctly');
+            console.log('Expected:', testData.practice);
+            console.log('Got:', result.practice);
+        }
+        
+        return result;
+    } catch (error) {
+        console.error('Test failed:', error);
+    }
+}
+
+// ============================================
+// FORM FIELD INSPECTOR
+// Run this to check if the practice field has any issues
+// ============================================
+
+function inspectPracticeField() {
+    const field = document.getElementById('newPractice');
+    
+    if (!field) {
+        console.error('❌ Practice field not found with ID "newPractice"');
+        
+        // Let's search for it
+        console.log('Searching for input fields with "practice" in name or id...');
+        const allInputs = document.querySelectorAll('input');
+        allInputs.forEach(input => {
+            if (input.id.toLowerCase().includes('practice') || 
+                input.name?.toLowerCase().includes('practice') ||
+                input.placeholder?.toLowerCase().includes('practice')) {
+                console.log('Found potential practice field:', {
+                    id: input.id,
+                    name: input.name,
+                    placeholder: input.placeholder,
+                    value: input.value,
+                    type: input.type
+                });
+            }
+        });
+        return;
+    }
+    
+    console.log('✅ Practice field found');
+    console.log('Field details:', {
+        id: field.id,
+        name: field.name,
+        value: field.value,
+        type: field.type,
+        required: field.required,
+        disabled: field.disabled,
+        readonly: field.readOnly,
+        placeholder: field.placeholder,
+        className: field.className,
+        parentElement: field.parentElement?.className
+    });
+    
+    // Check if there are any event listeners that might interfere
+    const events = getEventListeners ? getEventListeners(field) : 'Cannot check events';
+    console.log('Event listeners:', events);
+    
+    // Try setting a value programmatically
+    field.value = "Test Value " + Date.now();
+    console.log('Set test value to:', field.value);
+    
+    // Check if value persists
+    setTimeout(() => {
+        console.log('Value after 100ms:', field.value);
+    }, 100);
+}
+
+// Run these commands in the console after applying this code:
+// 1. inspectPracticeField()  - Check if the field exists and works
+// 2. testBackendDirectly()   - Test if backend accepts practice field
+// 3. Try adding a doctor normally and watch the console output
         
         // Load bulk update list
         function loadBulkUpdateList() {
