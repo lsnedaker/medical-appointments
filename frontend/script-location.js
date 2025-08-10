@@ -137,59 +137,34 @@ async function performSearch() {
     }
 }
 
-// Get coordinates for known zip codes
-function getZipCodeCoordinates(zipCode) {
-    const zipCoords = {
-        '28557': { lat: 34.7227, lng: -76.8583, city: 'Morehead City' },
-        '28516': { lat: 34.7199, lng: -76.6649, city: 'Beaufort' },
-        '28570': { lat: 34.7607, lng: -76.9419, city: 'Newport' },
-        '28532': { lat: 34.9024, lng: -76.8793, city: 'Havelock' },
-        '28584': { lat: 34.8960, lng: -76.7280, city: 'Cedar Point' },
-        '28577': { lat: 34.7091, lng: -76.1769, city: 'Sea Level' },
-        '28533': { lat: 34.6573, lng: -77.0733, city: 'Cape Carteret' },
-        '28594': { lat: 34.6907, lng: -77.0766, city: 'Emerald Isle' },
-        '28531': { lat: 34.7254, lng: -76.5835, city: 'Harkers Island' }
-    };
-    
-    return zipCoords[zipCode] || null;
-}
 
-// Geocode address (simplified - in production, use a real geocoding API)
+// Geocode address using Google Maps API
 async function geocodeAddress(address) {
-    // For this demo, we'll do simple city matching
-    const cityCoords = {
-        'morehead city': { lat: 34.7227, lng: -76.8583 },
-        'beaufort': { lat: 34.7199, lng: -76.6649 },
-        'newport': { lat: 34.7607, lng: -76.9419 },
-        'havelock': { lat: 34.9024, lng: -76.8793 },
-        'cedar point': { lat: 34.8960, lng: -76.7280 },
-        'sea level': { lat: 34.7091, lng: -76.1769 },
-        'cape carteret': { lat: 34.6573, lng: -77.0733 },
-        'emerald isle': { lat: 34.6907, lng: -77.0766 },
-        'harkers island': { lat: 34.7254, lng: -76.5835 },
-        'atlantic beach': { lat: 34.6990, lng: -76.7402 },
-        'pine knoll shores': { lat: 34.6957, lng: -76.8074 },
-        'swansboro': { lat: 34.6879, lng: -77.1191 }
-    };
-    
-    const searchTerm = address.toLowerCase().replace(/[,\s]+nc.*$/i, '').trim();
-    
-    for (const [city, coords] of Object.entries(cityCoords)) {
-        if (searchTerm.includes(city) || city.includes(searchTerm)) {
-            userLocation = {
-                lat: coords.lat,
-                lng: coords.lng,
-                display: address
-            };
-            hideError();
-            filterAndDisplay();
-            return;
+    return new Promise((resolve) => {
+        const geocoder = new google.maps.Geocoder();
+        
+        // Add state if not included
+        if (!address.toLowerCase().includes(', nc') && !address.toLowerCase().includes(',nc')) {
+            address += ', NC';
         }
-    }
-    
-    // If no match found
-    hideLoading();
-    showError('Location not found. Try entering a city name or zip code in Eastern NC.');
+        
+        geocoder.geocode({ address: address }, (results, status) => {
+            if (status === 'OK' && results[0]) {
+                const location = results[0].geometry.location;
+                userLocation = {
+                    lat: location.lat(),
+                    lng: location.lng(),
+                    display: results[0].formatted_address
+                };
+                hideError();
+                filterAndDisplay();
+            } else {
+                hideLoading();
+                showError('Location not found. Please try a different address.');
+            }
+            resolve();
+        });
+    });
 }
 
 // Filter and display results
@@ -198,21 +173,30 @@ function filterAndDisplay() {
     
     showLoading();
     
-    // Calculate distances for all doctors
-    const doctorsWithDistance = allDoctors.map(doctor => {
-        const distance = calculateDistance(
-            userLocation.lat,
-            userLocation.lng,
-            doctor.latitude || getDefaultLatitude(doctor.city),
-            doctor.longitude || getDefaultLongitude(doctor.city)
-        );
-        
+   // In filterAndDisplay function, update the distance calculation:
+const doctorsWithDistance = allDoctors.map(doctor => {
+    // Skip doctors without coordinates
+    if (!doctor.latitude || !doctor.longitude) {
         return {
             ...doctor,
-            distance: distance,
+            distance: 999, // Put at end if no coordinates
             daysUntil: getDaysUntilAppointment(doctor.next_available)
         };
-    });
+    }
+    
+    const distance = calculateDistance(
+        userLocation.lat,
+        userLocation.lng,
+        doctor.latitude,
+        doctor.longitude
+    );
+    
+    return {
+        ...doctor,
+        distance: distance,
+        daysUntil: getDaysUntilAppointment(doctor.next_available)
+    };
+});
     
     // Filter by radius
     let filteredDoctors = doctorsWithDistance.filter(doc => doc.distance <= searchRadius);
@@ -274,26 +258,7 @@ function toRad(deg) {
     return deg * (Math.PI / 180);
 }
 
-// Get default coordinates for cities
-function getDefaultLatitude(city) {
-    const coords = {
-        'Morehead City': 34.7227,
-        'Beaufort': 34.7199,
-        'Newport': 34.7607,
-        'Havelock': 34.9024
-    };
-    return coords[city] || 34.7227; // Default to Morehead City
-}
 
-function getDefaultLongitude(city) {
-    const coords = {
-        'Morehead City': -76.8583,
-        'Beaufort': -76.6649,
-        'Newport': -76.9419,
-        'Havelock': -76.8793
-    };
-    return coords[city] || -76.8583; // Default to Morehead City
-}
 
 // Display results
 function displayResults(doctors) {

@@ -6,6 +6,12 @@
     <title>Admin Dashboard - Medical Appointments</title>
     <link rel="stylesheet" href="style.css">
     <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
+    
+    <!-- Google Maps for Geocoding -->
+    <script>
+        const GOOGLE_MAPS_API_KEY = 'AIzaSyA-A_px-lTAQxWxobyH3lXfGa2BmkgvZwA';
+    </script>
+    <script src="https://maps.googleapis.com/maps/api/js?key=AIzaSyA-A_px-lTAQxWxobyH3lXfGa2BmkgvZwA&libraries=places"></script>
     <style>
         .admin-wrapper {
             max-width: 1400px;
@@ -295,6 +301,7 @@
         @keyframes spin {
             to { transform: rotate(360deg); }
         }
+        
     </style>
 </head>
 <body>
@@ -593,7 +600,26 @@
         
         let allDoctors = [];
         let currentTab = 'manage';
-        
+        // Geocode address using Google Maps
+    async function geocodeAddress(address) {
+        return new Promise((resolve, reject) => {
+            const geocoder = new google.maps.Geocoder();
+            
+            geocoder.geocode({ address: address }, (results, status) => {
+                if (status === 'OK' && results[0]) {
+                    const location = results[0].geometry.location;
+                    resolve({
+                        lat: location.lat(),
+                        lng: location.lng()
+                    });
+                } else {
+                    console.error('Geocoding failed:', status);
+                    resolve(null); // Return null instead of rejecting
+                }
+            });
+        });
+    }
+
         // Initialize
 document.addEventListener('DOMContentLoaded', () => {
     loadCustomSpecialties();  // Add this line
@@ -756,6 +782,9 @@ function displayDoctors(doctors) {
                 <button class="btn-small btn-update" onclick="updateAppointment(${doctor.id})">
                     Update
                 </button>
+                <button class="btn-small btn-edit" onclick='editDoctor(${JSON.stringify(doctor).replace(/'/g, "&#39;")})'>
+                    Edit
+                </button>
                 <button class="btn-small btn-delete" onclick="deleteDoctor(${doctor.id}, '${doctor.name.replace(/'/g, "\\'")}')">
                     Delete
                 </button>
@@ -857,9 +886,92 @@ async function deleteDoctor(doctorId, doctorName) {
 // Make deleteDoctor available globally
 window.deleteDoctor = deleteDoctor;
 
+// Edit doctor functions
+function editDoctor(doctor) {
+    // Populate the edit form
+    document.getElementById('editDoctorId').value = doctor.id;
+    document.getElementById('editName').value = doctor.name;
+    document.getElementById('editSpecialty').value = doctor.specialty;
+    document.getElementById('editPractice').value = doctor.practice || '';
+    document.getElementById('editPhone').value = doctor.phone;
+    document.getElementById('editAddress').value = doctor.address;
+    document.getElementById('editCity').value = doctor.city;
+    document.getElementById('editState').value = 'NC';
+    document.getElementById('editZip').value = doctor.zip_code;
+    document.getElementById('editNextAvailable').value = doctor.next_available.split('T')[0];
+    
+    // Show the modal
+    document.getElementById('editModal').style.display = 'flex';
+}
+
+function closeEditModal() {
+    document.getElementById('editModal').style.display = 'none';
+}
+
+// Setup edit form submission
+document.getElementById('editDoctorForm').addEventListener('submit', async (e) => {
+    e.preventDefault();
+    
+    const doctorId = document.getElementById('editDoctorId').value;
+    const formData = {
+        name: document.getElementById('editName').value,
+        specialty: document.getElementById('editSpecialty').value,
+        practice: document.getElementById('editPractice').value,
+        phone: document.getElementById('editPhone').value,
+        address: document.getElementById('editAddress').value,
+        city: document.getElementById('editCity').value,
+        zip_code: document.getElementById('editZip').value
+    };
+    
+    // Build full address for geocoding
+    const fullAddress = `${formData.address}, ${formData.city}, ${document.getElementById('editState').value} ${formData.zip_code}`;
+    
+    showLoading();
+    
+    try {
+        // Get coordinates from Google Maps
+        const coords = await geocodeAddress(fullAddress);
+        if (coords) {
+            formData.latitude = coords.lat;
+            formData.longitude = coords.lng;
+        }
+        
+        // Update doctor
+        const response = await fetch(`${API_URL}/doctors/${doctorId}`, {
+            method: 'PUT',
+            headers: {
+                'Content-Type': 'application/json',
+            },
+            body: JSON.stringify(formData)
+        });
+        
+        if (response.ok) {
+            // Update appointment date if changed
+            const newDate = document.getElementById('editNextAvailable').value;
+            await fetch(`${API_URL}/appointments`, {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json',
+                },
+                body: JSON.stringify({
+                    doctor_id: doctorId,
+                    next_available: newDate
+                })
+            });
+            
+            closeEditModal();
+            await loadDoctors();
+            alert('Doctor information updated successfully!');
+        }
+    } catch (error) {
+        console.error('Error updating doctor:', error);
+        alert('Error updating doctor. Please try again.');
+    } finally {
+        hideLoading();
+    }
+});
         // Add new doctor
        async function addNewDoctor() {
-    // Get the specialty value (handles custom)
     const specialtyValue = getSpecialtyValue();
     const customSpecialtyInput = document.getElementById('customSpecialty');
     
@@ -873,20 +985,31 @@ window.deleteDoctor = deleteDoctor;
     }
     
     const formData = {
-    name: document.getElementById('newName').value,
-    specialty: getSpecialtyValue(),
-    practice: document.getElementById('newPractice').value,
-    phone: document.getElementById('newPhone').value,
-    address: document.getElementById('newAddress').value,
-    city: document.getElementById('newCity').value,
-    zip_code: document.getElementById('newZip').value,
-    latitude: document.getElementById('newLatitude').value || null,
-    longitude: document.getElementById('newLongitude').value || null
-};
+        name: document.getElementById('newName').value,
+        specialty: specialtyValue,
+        practice: document.getElementById('newPractice').value,
+        phone: document.getElementById('newPhone').value,
+        address: document.getElementById('newAddress').value,
+        city: document.getElementById('newCity').value,
+        zip_code: document.getElementById('newZip').value
+    };
+    
+    // Build full address for geocoding
+    const fullAddress = `${formData.address}, ${formData.city}, NC ${formData.zip_code}`;
     
     showLoading();
     
     try {
+        // Get coordinates from Google Maps
+        const coords = await geocodeAddress(fullAddress);
+        if (coords) {
+            formData.latitude = coords.lat;
+            formData.longitude = coords.lng;
+            console.log(`Geocoded ${fullAddress} to:`, coords);
+        } else {
+            console.warn('Could not geocode address, using city defaults');
+        }
+        
         // Add doctor
         const doctorResponse = await fetch(`${API_URL}/doctors`, {
             method: 'POST',
@@ -915,11 +1038,8 @@ window.deleteDoctor = deleteDoctor;
         if (appointmentResponse.ok) {
             document.getElementById('addDoctorMessage').textContent = '✓ Doctor added successfully!';
             document.getElementById('addDoctorForm').reset();
-            
-            // Hide custom specialty input after reset
             document.getElementById('customSpecialty').style.display = 'none';
             
-            // Reload doctors
             await loadDoctors();
             
             setTimeout(() => {
@@ -1239,5 +1359,121 @@ async function importCSV() {
     }
 }
     </script>
+    <!-- Edit Doctor Modal -->
+<div id="editModal" class="modal" style="display: none;">
+    <div class="modal-content" style="max-width: 600px;">
+        <span class="modal-close" onclick="closeEditModal()">&times;</span>
+        <h2 style="margin-bottom: 1.5rem;">Edit Doctor Information</h2>
+        <form id="editDoctorForm">
+            <input type="hidden" id="editDoctorId">
+            <div class="form-grid">
+                <div class="form-group">
+                    <label class="form-label">Doctor Name *</label>
+                    <input type="text" id="editName" class="form-input" required>
+                </div>
+                <div class="form-group">
+                    <label class="form-label">Specialty *</label>
+                    <select id="editSpecialty" class="form-input" required>
+                        <option value="">Select Specialty</option>
+                        <option value="primary-care">Primary Care</option>
+                        <option value="cardiology">Cardiology</option>
+                        <option value="dermatology">Dermatology</option>
+                        <option value="endocrinology">Endocrinology</option>
+                        <option value="ent">ENT</option>
+                        <option value="nephrology">Nephrology</option>
+                        <option value="neurology">Neurology</option>
+                        <option value="obgyn">OB/GYN</option>
+                        <option value="ophthalmology">Ophthalmology</option>
+                        <option value="orthopedics">Orthopedics</option>
+                        <option value="pediatrics">Pediatrics</option>
+                        <option value="psychiatry">Psychiatry</option>
+                        <option value="pulmonology">Pulmonology</option>
+                        <option value="rheumatology">Rheumatology</option>
+                    </select>
+                </div>
+                <div class="form-group">
+                    <label class="form-label">Practice/Clinic Name *</label>
+                    <input type="text" id="editPractice" class="form-input" required>
+                </div>
+                <div class="form-group">
+                    <label class="form-label">Phone *</label>
+                    <input type="tel" id="editPhone" class="form-input" required>
+                </div>
+                <div class="form-group">
+                    <label class="form-label">Address *</label>
+                    <input type="text" id="editAddress" class="form-input" required>
+                </div>
+                <div class="form-group">
+                    <label class="form-label">City *</label>
+                    <input type="text" id="editCity" class="form-input" required>
+                </div>
+                <div class="form-group">
+                    <label class="form-label">State *</label>
+                    <input type="text" id="editState" class="form-input" value="NC" required>
+                </div>
+                <div class="form-group">
+                    <label class="form-label">Zip Code *</label>
+                    <input type="text" id="editZip" class="form-input" required>
+                </div>
+                <div class="form-group">
+                    <label class="form-label">Next Available *</label>
+                    <input type="date" id="editNextAvailable" class="form-input" required>
+                </div>
+            </div>
+            <div style="margin-top: 1.5rem; display: flex; gap: 1rem;">
+                <button type="submit" class="btn-primary">Save Changes</button>
+                <button type="button" onclick="closeEditModal()" style="padding: 0.875rem 2rem; background: #6b7280; color: white; border: none; border-radius: var(--radius); font-weight: 600; cursor: pointer;">Cancel</button>
+            </div>
+        </form>
+    </div>
+</div>
+
+<!-- Add modal styles -->
+<style>
+.modal {
+    position: fixed;
+    top: 0;
+    left: 0;
+    right: 0;
+    bottom: 0;
+    background: rgba(0, 0, 0, 0.5);
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    z-index: 2000;
+}
+
+.modal-content {
+    background: white;
+    padding: 2rem;
+    border-radius: var(--radius-lg);
+    max-height: 90vh;
+    overflow-y: auto;
+    position: relative;
+}
+
+.modal-close {
+    position: absolute;
+    top: 1rem;
+    right: 1rem;
+    font-size: 1.5rem;
+    cursor: pointer;
+    color: #6b7280;
+}
+
+.modal-close:hover {
+    color: #1f2937;
+}
+
+.btn-edit {
+    background: #3b82f6;
+    color: white;
+    margin-left: 0.25rem;
+}
+
+.btn-edit:hover {
+    background: #2563eb;
+}
+</style>
 </body>
 </html>

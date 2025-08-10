@@ -115,6 +115,37 @@ app.delete('/api/doctors/:id', async (req, res) => {
     res.status(500).json({ error: 'Failed to delete doctor' });
   }
 });
+// Update a doctor
+app.put('/api/doctors/:id', async (req, res) => {
+  try {
+    const { id } = req.params;
+    const { name, specialty, practice, address, city, zip_code, phone, latitude, longitude } = req.body;
+    
+    const { data, error } = await supabase
+      .from('doctors')
+      .update({ 
+        name, 
+        specialty, 
+        practice, 
+        address, 
+        city, 
+        zip_code, 
+        phone, 
+        latitude, 
+        longitude,
+        updated_at: new Date().toISOString()
+      })
+      .eq('id', id)
+      .select();
+
+    if (error) throw error;
+    
+    res.json(data[0]);
+  } catch (error) {
+    console.error('Error updating doctor:', error);
+    res.status(500).json({ error: 'Failed to update doctor' });
+  }
+});
 
 app.listen(port, () => {
   console.log(`Server running on http://localhost:${port}`);
