@@ -45,16 +45,10 @@ function setupEventListeners() {
     });
 }
 
-// Setup radius slider - FIXED FOR NATIONWIDE
+// Setup radius slider - FIXED FOR PERFECT ALIGNMENT
 function setupRadiusSlider() {
     const slider = document.getElementById('radiusSlider');
     const valueDisplay = document.getElementById('radiusValue');
-    
-    // Update slider attributes for new range
-    // Using special values: 5-500 for miles, 9999 for nationwide
-    slider.min = '1';
-    slider.max = '6'; // 6 positions total
-    slider.value = '2'; // Default position (25 miles)
     
     // Define the actual radius values for each position
     const radiusValues = {
@@ -66,10 +60,26 @@ function setupRadiusSlider() {
         '6': 99999 // Nationwide
     };
     
-    slider.addEventListener('input', (e) => {
-        const position = e.target.value;
+    // Calculate percentage position for each step (6 positions = 0%, 20%, 40%, 60%, 80%, 100%)
+    const stepPercentages = {
+        '1': 0,
+        '2': 20,
+        '3': 40,
+        '4': 60,
+        '5': 80,
+        '6': 100
+    };
+    
+    // Update slider visual position and value
+    function updateSlider() {
+        const position = slider.value;
         const actualRadius = radiusValues[position];
+        const percentage = stepPercentages[position];
         
+        // Update the progress fill
+        slider.style.setProperty('--progress', `${percentage}%`);
+        
+        // Update the display text
         if (actualRadius === 99999) {
             searchRadius = 99999; // Nationwide
             valueDisplay.textContent = 'Nationwide (Max)';
@@ -77,10 +87,14 @@ function setupRadiusSlider() {
             searchRadius = actualRadius;
             valueDisplay.textContent = `${actualRadius} miles`;
         }
-        
-        // Update slider fill
-        const percent = ((position - slider.min) / (slider.max - slider.min)) * 100;
-        slider.style.setProperty('--value', `${percent}%`);
+    }
+    
+    // Initialize
+    updateSlider();
+    
+    // Handle slider input
+    slider.addEventListener('input', (e) => {
+        updateSlider();
         
         // Re-filter if we have results
         if (userLocation && allDoctors.length > 0) {
@@ -88,9 +102,15 @@ function setupRadiusSlider() {
         }
     });
     
-    // Set initial value display
-    valueDisplay.textContent = '25 miles';
-    searchRadius = 25;
+    // Ensure slider snaps to discrete positions
+    slider.addEventListener('change', (e) => {
+        // Force snap to nearest position
+        const value = Math.round(parseFloat(e.target.value));
+        if (value !== parseFloat(e.target.value)) {
+            e.target.value = value;
+            updateSlider();
+        }
+    });
 }
 
 // Load initial data

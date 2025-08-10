@@ -392,29 +392,189 @@
                 </button>
             </div>
             
-            <!-- Radius Slider -->
+           <!-- Radius Slider -->
 <div class="radius-control">
     <div class="radius-label">
         <span>Search Radius</span>
         <span class="radius-value" id="radiusValue">25 miles</span>
     </div>
-    <input type="range" 
-           id="radiusSlider" 
-           class="radius-slider" 
-           min="1" 
-           max="6" 
-           value="2"
-           step="1"
-           style="--value: 20%;">
-    <div class="radius-markers" style="display: grid; grid-template-columns: repeat(6, 1fr); text-align: center;">
-        <span>5mi</span>
-        <span>25mi</span>
-        <span>100mi</span>
-        <span>250mi</span>
-        <span>500mi</span>
-        <span style="font-weight: 700; color: var(--primary);">MAX</span>
+    <div class="slider-container" style="position: relative; padding: 0 14px; margin-top: 1rem;">
+        <input type="range" 
+               id="radiusSlider" 
+               class="radius-slider" 
+               min="1" 
+               max="6" 
+               value="2"
+               step="1">
+        <div class="radius-markers">
+            <span data-position="0">5mi</span>
+            <span data-position="20">25mi</span>
+            <span data-position="40">100mi</span>
+            <span data-position="60">250mi</span>
+            <span data-position="80">500mi</span>
+            <span data-position="100" style="font-weight: 700; color: var(--primary);">MAX</span>
+        </div>
     </div>
 </div>
+
+<!-- Updated CSS for perfect alignment -->
+<style>
+    .radius-control {
+        background: #f8f9ff;
+        border-radius: 16px;
+        padding: 1.5rem;
+        margin-bottom: 1.5rem;
+    }
+    
+    .radius-label {
+        display: flex;
+        justify-content: space-between;
+        align-items: center;
+        margin-bottom: 1rem;
+        font-weight: 600;
+        color: var(--text-primary);
+    }
+    
+    .radius-value {
+        background: var(--primary);
+        color: white;
+        padding: 0.375rem 0.75rem;
+        border-radius: 8px;
+        font-size: 0.875rem;
+    }
+    
+    .slider-container {
+        position: relative;
+        padding: 0 14px;
+        margin-top: 1rem;
+    }
+    
+    .radius-slider {
+        width: 100%;
+        height: 8px;
+        border-radius: 4px;
+        background: #e9ecff;
+        outline: none;
+        -webkit-appearance: none;
+        appearance: none;
+        cursor: pointer;
+        margin: 0;
+    }
+    
+    .radius-slider::-webkit-slider-thumb {
+        -webkit-appearance: none;
+        appearance: none;
+        width: 28px;
+        height: 28px;
+        border-radius: 50%;
+        background: var(--primary, #5b5fff);
+        cursor: pointer;
+        box-shadow: 0 4px 12px rgba(91, 95, 255, 0.4);
+        border: 3px solid white;
+        position: relative;
+        z-index: 2;
+    }
+    
+    .radius-slider::-webkit-slider-thumb:hover {
+        transform: scale(1.15);
+        box-shadow: 0 6px 20px rgba(91, 95, 255, 0.5);
+    }
+    
+    .radius-slider::-moz-range-thumb {
+        width: 28px;
+        height: 28px;
+        border-radius: 50%;
+        background: var(--primary, #5b5fff);
+        cursor: pointer;
+        box-shadow: 0 4px 12px rgba(91, 95, 255, 0.4);
+        border: 3px solid white;
+        position: relative;
+        z-index: 2;
+    }
+    
+    .radius-slider::-moz-range-thumb:hover {
+        transform: scale(1.15);
+        box-shadow: 0 6px 20px rgba(91, 95, 255, 0.5);
+    }
+    
+    /* Progress track fill */
+    .radius-slider::-webkit-slider-runnable-track {
+        height: 8px;
+        border-radius: 4px;
+    }
+    
+    .radius-slider::-moz-range-track {
+        height: 8px;
+        border-radius: 4px;
+        background: #e9ecff;
+    }
+    
+    /* Markers positioning */
+    .radius-markers {
+        display: flex;
+        justify-content: space-between;
+        margin-top: 1rem;
+        font-size: 0.8rem;
+        color: var(--text-secondary);
+        user-select: none;
+        position: relative;
+    }
+    
+    .radius-markers span {
+        position: absolute;
+        transform: translateX(-50%);
+        text-align: center;
+        white-space: nowrap;
+    }
+    
+    /* Position each marker precisely */
+    .radius-markers span[data-position="0"] { left: 0%; transform: translateX(0); }
+    .radius-markers span[data-position="20"] { left: 20%; }
+    .radius-markers span[data-position="40"] { left: 40%; }
+    .radius-markers span[data-position="60"] { left: 60%; }
+    .radius-markers span[data-position="80"] { left: 80%; }
+    .radius-markers span[data-position="100"] { left: 100%; transform: translateX(-100%); }
+    
+    /* Tick marks above labels */
+    .radius-markers::before {
+        content: '';
+        position: absolute;
+        top: -24px;
+        left: 0;
+        right: 0;
+        height: 1px;
+        background: linear-gradient(to right,
+            transparent 0%, #d1d5db 0%, #d1d5db 1px, transparent 1px,
+            transparent calc(20% - 0.5px), #d1d5db calc(20% - 0.5px), #d1d5db calc(20% + 0.5px), transparent calc(20% + 0.5px),
+            transparent calc(40% - 0.5px), #d1d5db calc(40% - 0.5px), #d1d5db calc(40% + 0.5px), transparent calc(40% + 0.5px),
+            transparent calc(60% - 0.5px), #d1d5db calc(60% - 0.5px), #d1d5db calc(60% + 0.5px), transparent calc(60% + 0.5px),
+            transparent calc(80% - 0.5px), #d1d5db calc(80% - 0.5px), #d1d5db calc(80% + 0.5px), transparent calc(80% + 0.5px),
+            transparent calc(100% - 1px), #d1d5db calc(100% - 1px), #d1d5db 100%
+        );
+    }
+    
+    /* Individual tick marks */
+    .radius-markers span::before {
+        content: '|';
+        position: absolute;
+        top: -20px;
+        left: 50%;
+        transform: translateX(-50%);
+        color: #d1d5db;
+        font-size: 0.7rem;
+        line-height: 1;
+    }
+    
+    /* Visual feedback for slider position */
+    .radius-slider {
+        background: linear-gradient(to right, 
+            var(--primary, #5b5fff) 0%, 
+            var(--primary, #5b5fff) var(--progress, 20%), 
+            #e9ecff var(--progress, 20%), 
+            #e9ecff 100%);
+    }
+</style>
+
             
             <!-- Specialty Filter -->
             <div style="margin-bottom: 1.5rem;">
