@@ -7,11 +7,15 @@
     <link rel="stylesheet" href="style.css">
     <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
     
+    <!-- Supabase Client -->
+    <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+    
     <!-- Google Maps for Geocoding -->
     <script>
         const GOOGLE_MAPS_API_KEY = 'AIzaSyA-A_px-lTAQxWxobyH3lXfGa2BmkgvZwA';
     </script>
     <script src="https://maps.googleapis.com/maps/api/js?key=AIzaSyA-A_px-lTAQxWxobyH3lXfGa2BmkgvZwA&libraries=places"></script>
+
     <style>
         .admin-wrapper {
             max-width: 1400px;
@@ -270,6 +274,16 @@
             background: #dc2626;
         }
         
+        .btn-edit {
+            background: #3b82f6;
+            color: white;
+            margin-left: 0.25rem;
+        }
+
+        .btn-edit:hover {
+            background: #2563eb;
+        }
+        
         .success-msg {
             color: var(--success);
             font-size: 0.75rem;
@@ -302,6 +316,40 @@
             to { transform: rotate(360deg); }
         }
         
+        .modal {
+            position: fixed;
+            top: 0;
+            left: 0;
+            right: 0;
+            bottom: 0;
+            background: rgba(0, 0, 0, 0.5);
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            z-index: 2000;
+        }
+
+        .modal-content {
+            background: white;
+            padding: 2rem;
+            border-radius: var(--radius-lg);
+            max-height: 90vh;
+            overflow-y: auto;
+            position: relative;
+        }
+
+        .modal-close {
+            position: absolute;
+            top: 1rem;
+            right: 1rem;
+            font-size: 1.5rem;
+            cursor: pointer;
+            color: #6b7280;
+        }
+
+        .modal-close:hover {
+            color: #1f2937;
+        }
     </style>
 </head>
 <body>
@@ -364,23 +412,23 @@
                                class="search-input" 
                                placeholder="Search doctors...">
                         <select id="filterSpecialty" class="filter-select">
-    <option value="">All Specialties</option>
-    <option value="primary-care">Primary Care</option>
-    <option value="cardiology">Cardiology</option>
-    <option value="dermatology">Dermatology</option>
-    <option value="endocrinology">Endocrinology</option>
-    <option value="ent">ENT</option>
-    <option value="nephrology">Nephrology</option>
-    <option value="neurology">Neurology</option>
-    <option value="obgyn">OB/GYN</option>
-    <option value="ophthalmology">Ophthalmology</option>
-    <option value="orthopedics">Orthopedics</option>
-    <option value="pediatrics">Pediatrics</option>
-    <option value="psychiatry">Psychiatry</option>
-    <option value="pulmonology">Pulmonology</option>
-    <option value="rheumatology">Rheumatology</option>
-    <option value="custom" disabled style="color: #999;">──────────</option>
-</select>
+                            <option value="">All Specialties</option>
+                            <option value="primary-care">Primary Care</option>
+                            <option value="cardiology">Cardiology</option>
+                            <option value="dermatology">Dermatology</option>
+                            <option value="endocrinology">Endocrinology</option>
+                            <option value="ent">ENT</option>
+                            <option value="nephrology">Nephrology</option>
+                            <option value="neurology">Neurology</option>
+                            <option value="obgyn">OB/GYN</option>
+                            <option value="ophthalmology">Ophthalmology</option>
+                            <option value="orthopedics">Orthopedics</option>
+                            <option value="pediatrics">Pediatrics</option>
+                            <option value="psychiatry">Psychiatry</option>
+                            <option value="pulmonology">Pulmonology</option>
+                            <option value="rheumatology">Rheumatology</option>
+                            <option value="custom" disabled style="color: #999;">──────────</option>
+                        </select>
                     </div>
                 </div>
                 <table>
@@ -406,121 +454,121 @@
             <div class="add-doctor-form">
                 <h2 style="margin-bottom: 1.5rem;">Add New Doctor</h2>
                 <form id="addDoctorForm">
-    <div class="form-grid">
-        <div class="form-group">
-            <label class="form-label">Doctor Name *</label>
-            <input type="text" 
-                   id="newName" 
-                   class="form-input" 
-                   placeholder="Dr. John Smith, MD"
-                   required>
-        </div>
-        <div class="form-group">
-    <label class="form-label">Specialty *</label>
-    <select id="newSpecialty" class="form-input" required onchange="checkCustomSpecialty()">
-        <option value="">Select Specialty</option>
-        <option value="primary-care">Primary Care</option>
-        <option value="cardiology">Cardiology</option>
-        <option value="dermatology">Dermatology</option>
-        <option value="endocrinology">Endocrinology</option>
-        <option value="ent">ENT</option>
-        <option value="nephrology">Nephrology</option>
-        <option value="neurology">Neurology</option>
-        <option value="obgyn">OB/GYN</option>
-        <option value="ophthalmology">Ophthalmology</option>
-        <option value="orthopedics">Orthopedics</option>
-        <option value="pediatrics">Pediatrics</option>
-        <option value="psychiatry">Psychiatry</option>
-        <option value="pulmonology">Pulmonology</option>
-        <option value="rheumatology">Rheumatology</option>
-        <option value="custom">➕ Add Custom Specialty...</option>
-    </select>
-    <input type="text" 
-           id="customSpecialty" 
-           class="form-input" 
-           placeholder="Enter specialty name (e.g., gastroenterology)"
-           style="display: none; margin-top: 0.5rem;">
-</div>
-        <div class="form-group">
-            <label class="form-label">Phone *</label>
-            <input type="tel" 
-                   id="newPhone" 
-                   class="form-input" 
-                   placeholder="(252) 555-0100"
-                   required>
-        </div>
-            <div class="form-group">
-            <label class="form-label">Practice/Clinic Name *</label>
-             <input type="text" 
-           id="newPractice" 
-           class="form-input" 
-           placeholder="Carteret Medical Group"
-           required>
-</div>
-        <div class="form-group">
-            <label class="form-label">Address *</label>
-            <input type="text" 
-                   id="newAddress" 
-                   class="form-input" 
-                   placeholder="123 Medical Center Dr"
-                   required>
-        </div>
-        <div class="form-group">
-            <label class="form-label">City *</label>
-            <select id="newCity" class="form-input" required>
-                <option value="">Select City</option>
-                <option value="Morehead City">Morehead City</option>
-                <option value="Beaufort">Beaufort</option>
-                <option value="Newport">Newport</option>
-                <option value="Havelock">Havelock</option>
-            </select>
-        </div>
-        <div class="form-group">
-            <label class="form-label">Zip Code *</label>
-            <select id="newZip" class="form-input" required>
-                <option value="">Select Zip</option>
-                <option value="28557">28557 - Morehead City</option>
-                <option value="28516">28516 - Beaufort</option>
-                <option value="28570">28570 - Newport</option>
-                <option value="28532">28532 - Havelock</option>
-            </select>
-        </div>
-        <div class="form-group">
-    <label class="form-label">Latitude (Optional)</label>
-    <input type="number" 
-           id="newLatitude" 
-           class="form-input" 
-           placeholder="34.7227"
-           step="0.0001"
-           min="-90"
-           max="90">
-</div>
-<div class="form-group">
-    <label class="form-label">Longitude (Optional)</label>
-    <input type="number" 
-           id="newLongitude" 
-           class="form-input" 
-           placeholder="-76.8583"
-           step="0.0001"
-           min="-180"
-           max="180">
-</div>
-        <div class="form-group">
-            <label class="form-label">First Available Appointment *</label>
-            <input type="date" 
-                   id="newNextAvailable" 
-                   class="form-input"
-                   min=""
-                   required>
-        </div>
-    </div>
-    <div style="margin-top: 1.5rem;">
-        <button type="submit" style="padding: 1rem 2rem; background: #4F46E5; color: white; border: none; border-radius: 12px; font-size: 1rem; font-weight: 600; cursor: pointer;">
-            Add Doctor to Database
-        </button>
-        <span id="addDoctorMessage" style="margin-left: 1rem; color: #10B981; font-weight: 500;"></span>
-    </div>
-</form>
+                    <div class="form-grid">
+                        <div class="form-group">
+                            <label class="form-label">Doctor Name *</label>
+                            <input type="text" 
+                                   id="newName" 
+                                   class="form-input" 
+                                   placeholder="Dr. John Smith, MD"
+                                   required>
+                        </div>
+                        <div class="form-group">
+                            <label class="form-label">Specialty *</label>
+                            <select id="newSpecialty" class="form-input" required onchange="checkCustomSpecialty()">
+                                <option value="">Select Specialty</option>
+                                <option value="primary-care">Primary Care</option>
+                                <option value="cardiology">Cardiology</option>
+                                <option value="dermatology">Dermatology</option>
+                                <option value="endocrinology">Endocrinology</option>
+                                <option value="ent">ENT</option>
+                                <option value="nephrology">Nephrology</option>
+                                <option value="neurology">Neurology</option>
+                                <option value="obgyn">OB/GYN</option>
+                                <option value="ophthalmology">Ophthalmology</option>
+                                <option value="orthopedics">Orthopedics</option>
+                                <option value="pediatrics">Pediatrics</option>
+                                <option value="psychiatry">Psychiatry</option>
+                                <option value="pulmonology">Pulmonology</option>
+                                <option value="rheumatology">Rheumatology</option>
+                                <option value="custom">➕ Add Custom Specialty...</option>
+                            </select>
+                            <input type="text" 
+                                   id="customSpecialty" 
+                                   class="form-input" 
+                                   placeholder="Enter specialty name (e.g., gastroenterology)"
+                                   style="display: none; margin-top: 0.5rem;">
+                        </div>
+                        <div class="form-group">
+                            <label class="form-label">Phone *</label>
+                            <input type="tel" 
+                                   id="newPhone" 
+                                   class="form-input" 
+                                   placeholder="(252) 555-0100"
+                                   required>
+                        </div>
+                        <div class="form-group">
+                            <label class="form-label">Practice/Clinic Name *</label>
+                            <input type="text" 
+                                   id="newPractice" 
+                                   class="form-input" 
+                                   placeholder="Carteret Medical Group"
+                                   required>
+                        </div>
+                        <div class="form-group">
+                            <label class="form-label">Address *</label>
+                            <input type="text" 
+                                   id="newAddress" 
+                                   class="form-input" 
+                                   placeholder="123 Medical Center Dr"
+                                   required>
+                        </div>
+                        <div class="form-group">
+                            <label class="form-label">City *</label>
+                            <select id="newCity" class="form-input" required>
+                                <option value="">Select City</option>
+                                <option value="Morehead City">Morehead City</option>
+                                <option value="Beaufort">Beaufort</option>
+                                <option value="Newport">Newport</option>
+                                <option value="Havelock">Havelock</option>
+                            </select>
+                        </div>
+                        <div class="form-group">
+                            <label class="form-label">Zip Code *</label>
+                            <select id="newZip" class="form-input" required>
+                                <option value="">Select Zip</option>
+                                <option value="28557">28557 - Morehead City</option>
+                                <option value="28516">28516 - Beaufort</option>
+                                <option value="28570">28570 - Newport</option>
+                                <option value="28532">28532 - Havelock</option>
+                            </select>
+                        </div>
+                        <div class="form-group">
+                            <label class="form-label">Latitude (Optional)</label>
+                            <input type="number" 
+                                   id="newLatitude" 
+                                   class="form-input" 
+                                   placeholder="34.7227"
+                                   step="0.0001"
+                                   min="-90"
+                                   max="90">
+                        </div>
+                        <div class="form-group">
+                            <label class="form-label">Longitude (Optional)</label>
+                            <input type="number" 
+                                   id="newLongitude" 
+                                   class="form-input" 
+                                   placeholder="-76.8583"
+                                   step="0.0001"
+                                   min="-180"
+                                   max="180">
+                        </div>
+                        <div class="form-group">
+                            <label class="form-label">First Available Appointment *</label>
+                            <input type="date" 
+                                   id="newNextAvailable" 
+                                   class="form-input"
+                                   min=""
+                                   required>
+                        </div>
+                    </div>
+                    <div style="margin-top: 1.5rem;">
+                        <button type="submit" style="padding: 1rem 2rem; background: #4F46E5; color: white; border: none; border-radius: 12px; font-size: 1rem; font-weight: 600; cursor: pointer;">
+                            Add Doctor to Database
+                        </button>
+                        <span id="addDoctorMessage" style="margin-left: 1rem; color: #10B981; font-weight: 500;"></span>
+                    </div>
+                </form>
             </div>
         </div>
 
@@ -539,54 +587,55 @@
                 </button>
             </div>
         </div>
+
         <!-- CSV Import Tab -->
-<div id="import-tab" class="tab-content">
-    <div class="add-doctor-form">
-        <h2 style="margin-bottom: 1.5rem;">Import Doctors from CSV</h2>
-        
-        <div style="background: #f0f9ff; border: 2px solid #0284c7; border-radius: 12px; padding: 1.5rem; margin-bottom: 2rem;">
-            <h3 style="color: #0284c7; margin-bottom: 1rem;">CSV Format Requirements</h3>
-            <p style="margin-bottom: 1rem;">Your CSV file must have these exact column headers:</p>
-            <code style="background: white; padding: 1rem; border-radius: 8px; display: block; margin-bottom: 1rem;">
-                name,specialty,practice,phone,address,city,zip_code,next_available
-            </code>
-            <p style="margin-bottom: 0.5rem;"><strong>Example rows:</strong></p>
-            <code style="background: white; padding: 1rem; border-radius: 8px; display: block; font-size: 0.875rem;">
-                Dr. John Smith MD,primary-care,Coastal Medical Group,(252) 555-0100,123 Main St,Morehead City,28557,2024-02-15<br>
-                Dr. Jane Doe MD,cardiology,Heart Specialists,(252) 555-0200,456 Oak Ave,Beaufort,28516,2024-02-20
-            </code>
-        </div>
+        <div id="import-tab" class="tab-content">
+            <div class="add-doctor-form">
+                <h2 style="margin-bottom: 1.5rem;">Import Doctors from CSV</h2>
+                
+                <div style="background: #f0f9ff; border: 2px solid #0284c7; border-radius: 12px; padding: 1.5rem; margin-bottom: 2rem;">
+                    <h3 style="color: #0284c7; margin-bottom: 1rem;">CSV Format Requirements</h3>
+                    <p style="margin-bottom: 1rem;">Your CSV file must have these exact column headers:</p>
+                    <code style="background: white; padding: 1rem; border-radius: 8px; display: block; margin-bottom: 1rem;">
+                        name,specialty,practice,phone,address,city,zip_code,next_available
+                    </code>
+                    <p style="margin-bottom: 0.5rem;"><strong>Example rows:</strong></p>
+                    <code style="background: white; padding: 1rem; border-radius: 8px; display: block; font-size: 0.875rem;">
+                        Dr. John Smith MD,primary-care,Coastal Medical Group,(252) 555-0100,123 Main St,Morehead City,28557,2024-02-15<br>
+                        Dr. Jane Doe MD,cardiology,Heart Specialists,(252) 555-0200,456 Oak Ave,Beaufort,28516,2024-02-20
+                    </code>
+                </div>
 
-        <div style="margin-bottom: 2rem;">
-            <label class="form-label" style="display: block; margin-bottom: 0.5rem;">Select CSV File</label>
-            <input type="file" 
-                   id="csvFile" 
-                   accept=".csv"
-                   style="padding: 0.75rem; border: 2px dashed #cbd5e1; border-radius: 12px; width: 100%; cursor: pointer;">
-        </div>
+                <div style="margin-bottom: 2rem;">
+                    <label class="form-label" style="display: block; margin-bottom: 0.5rem;">Select CSV File</label>
+                    <input type="file" 
+                           id="csvFile" 
+                           accept=".csv"
+                           style="padding: 0.75rem; border: 2px dashed #cbd5e1; border-radius: 12px; width: 100%; cursor: pointer;">
+                </div>
 
-        <button onclick="previewCSV()" class="btn-primary" style="margin-right: 1rem;">
-            Preview Data
-        </button>
-        
-        <button onclick="importCSV()" class="btn-primary" style="background: #10b981;" id="importBtn" disabled>
-            Import All Doctors
-        </button>
-        
-        <div id="importMessage" style="margin-top: 1rem; font-weight: 600;"></div>
+                <button onclick="previewCSV()" class="btn-primary" style="margin-right: 1rem;">
+                    Preview Data
+                </button>
+                
+                <button onclick="importCSV()" class="btn-primary" style="background: #10b981;" id="importBtn" disabled>
+                    Import All Doctors
+                </button>
+                
+                <div id="importMessage" style="margin-top: 1rem; font-weight: 600;"></div>
 
-        <!-- Preview Table -->
-        <div id="csvPreview" style="margin-top: 2rem; display: none;">
-            <h3 style="margin-bottom: 1rem;">Preview (First 5 rows)</h3>
-            <div style="overflow-x: auto;">
-                <table style="width: 100%; font-size: 0.875rem;">
-                    <thead id="previewHead"></thead>
-                    <tbody id="previewBody"></tbody>
-                </table>
+                <!-- Preview Table -->
+                <div id="csvPreview" style="margin-top: 2rem; display: none;">
+                    <h3 style="margin-bottom: 1rem;">Preview (First 5 rows)</h3>
+                    <div style="overflow-x: auto;">
+                        <table style="width: 100%; font-size: 0.875rem;">
+                            <thead id="previewHead"></thead>
+                            <tbody id="previewBody"></tbody>
+                        </table>
+                    </div>
+                </div>
             </div>
         </div>
-    </div>
-</div>
     </div>
 
     <!-- Loading Overlay -->
@@ -594,269 +643,311 @@
         <div class="loading-spinner"></div>
     </div>
 
+    <!-- Edit Doctor Modal -->
+    <div id="editModal" class="modal" style="display: none;">
+        <div class="modal-content" style="max-width: 600px;">
+            <span class="modal-close" onclick="closeEditModal()">&times;</span>
+            <h2 style="margin-bottom: 1.5rem;">Edit Doctor Information</h2>
+            <form id="editDoctorForm">
+                <input type="hidden" id="editDoctorId">
+                <div class="form-grid">
+                    <div class="form-group">
+                        <label class="form-label">Doctor Name *</label>
+                        <input type="text" id="editName" class="form-input" required>
+                    </div>
+                    <div class="form-group">
+                        <label class="form-label">Specialty *</label>
+                        <select id="editSpecialty" class="form-input" required>
+                            <option value="">Select Specialty</option>
+                            <option value="primary-care">Primary Care</option>
+                            <option value="cardiology">Cardiology</option>
+                            <option value="dermatology">Dermatology</option>
+                            <option value="endocrinology">Endocrinology</option>
+                            <option value="ent">ENT</option>
+                            <option value="nephrology">Nephrology</option>
+                            <option value="neurology">Neurology</option>
+                            <option value="obgyn">OB/GYN</option>
+                            <option value="ophthalmology">Ophthalmology</option>
+                            <option value="orthopedics">Orthopedics</option>
+                            <option value="pediatrics">Pediatrics</option>
+                            <option value="psychiatry">Psychiatry</option>
+                            <option value="pulmonology">Pulmonology</option>
+                            <option value="rheumatology">Rheumatology</option>
+                        </select>
+                    </div>
+                    <div class="form-group">
+                        <label class="form-label">Practice/Clinic Name *</label>
+                        <input type="text" id="editPractice" class="form-input" required>
+                    </div>
+                    <div class="form-group">
+                        <label class="form-label">Phone *</label>
+                        <input type="tel" id="editPhone" class="form-input" required>
+                    </div>
+                    <div class="form-group">
+                        <label class="form-label">Address *</label>
+                        <input type="text" id="editAddress" class="form-input" required>
+                    </div>
+                    <div class="form-group">
+                        <label class="form-label">City *</label>
+                        <input type="text" id="editCity" class="form-input" required>
+                    </div>
+                    <div class="form-group">
+                        <label class="form-label">State *</label>
+                        <input type="text" id="editState" class="form-input" value="NC" required>
+                    </div>
+                    <div class="form-group">
+                        <label class="form-label">Zip Code *</label>
+                        <input type="text" id="editZip" class="form-input" required>
+                    </div>
+                    <div class="form-group">
+                        <label class="form-label">Next Available *</label>
+                        <input type="date" id="editNextAvailable" class="form-input" required>
+                    </div>
+                </div>
+                <div style="margin-top: 1.5rem; display: flex; gap: 1rem;">
+                    <button type="submit" class="btn-primary">Save Changes</button>
+                    <button type="button" onclick="closeEditModal()" style="padding: 0.875rem 2rem; background: #6b7280; color: white; border: none; border-radius: var(--radius); font-weight: 600; cursor: pointer;">Cancel</button>
+                </div>
+            </form>
+        </div>
+    </div>
+
     <script>
-        // Add this to the TOP of the <script> section in admin-enhanced.html
-// BEFORE any other JavaScript code
-
-// ============================================
-// AUTHENTICATION CHECK
-// ============================================
-
-// Initialize Supabase
-const SUPABASE_URL = 'YOUR_SUPABhttps://uuxtywqbyyczpjptzmvg.supabase.coSE_URL'; // Replace with your Supabase URL
-const SUPABASE_ANON_KEY = 'YOUR_SUPABASE_ANeyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InV1eHR5d3FieXljenBqcHR6bXZnIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NTQ3NjExNTksImV4cCI6MjA3MDMzNzE1OX0.2c6mAfSSK0D7i2LtaMP11LlvGqKgvjmgTg4BI722wUoN_KEY'; // Replace with your Supabase anon key
-
-// Create Supabase client if not already created
-if (typeof window.supabase === 'undefined') {
-    // Add Supabase script dynamically
-    const script = document.createElement('script');
-    script.src = 'https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2';
-    script.onload = initializeAuth;
-    document.head.appendChild(script);
-} else {
-    initializeAuth();
-}
-
-async function initializeAuth() {
-    const supabase = window.supabase.createClient(SUPABASE_URL, SUPABASE_ANON_KEY);
-    
-    // Check authentication
-    const { data: { session } } = await supabase.auth.getSession();
-    
-    if (!session) {
-        // Not authenticated, redirect to login
-        alert('Please login to access the admin dashboard');
-        window.location.href = 'admin-login.html';
-        return;
-    }
-    
-    // User is authenticated, continue loading the page
-    console.log('Admin authenticated:', session.user.email);
-    
-    // Add logout button to the nav
-    addLogoutButton(supabase);
-    
-    // Continue with your existing initialization
-    loadDoctors();
-    setupEventListeners();
-    setMinDate();
-}
-
-// Add logout functionality
-function addLogoutButton(supabase) {
-    const navWrapper = document.querySelector('.nav-wrapper');
-    if (navWrapper) {
-        const logoutBtn = document.createElement('button');
-        logoutBtn.textContent = 'Logout';
-        logoutBtn.style.cssText = `
-            background: #ef4444;
-            color: white;
-            border: none;
-            padding: 0.5rem 1rem;
-            border-radius: 8px;
-            cursor: pointer;
-            font-weight: 500;
-        `;
-        logoutBtn.onclick = async () => {
-            await supabase.auth.signOut();
-            localStorage.removeItem('adminAuthenticated');
-            window.location.href = 'admin-login.html';
-        };
-        navWrapper.appendChild(logoutBtn);
-    }
-}
-
-// ============================================
-// END AUTHENTICATION CHECK
-// ============================================
-
-// Your existing code continues here...
-        // Update with your backend URL
+        // ============================================
+        // AUTHENTICATION AND INITIALIZATION
+        // ============================================
+        
+        // Supabase configuration
+        const SUPABASE_URL = 'https://uuxtywqbyyczpjptzmvg.supabase.co';
+        const SUPABASE_ANON_KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InV1eHR5d3FieXljenBqcHR6bXZnIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NTQ3NjExNTksImV4cCI6MjA3MDMzNzE1OX0.2c6mAfSSK0D7i2LtaMP11LlvGqKgvjmgTg4BI722wUo';
+        
+        // Backend API configuration
         const API_URL = 'https://medical-appointments-api-n3yu.onrender.com/api';
         
+        // Global variables
         let allDoctors = [];
         let currentTab = 'manage';
-        // Also update the geocodeAddress function to handle errors better
-async function geocodeAddress(address) {
-    return new Promise((resolve) => {
-        try {
-            const geocoder = new google.maps.Geocoder();
+        let customSpecialties = JSON.parse(localStorage.getItem('customSpecialties') || '[]');
+        let csvData = [];
+        let supabaseClient = null;
+        
+        // Initialize authentication and dashboard
+        window.addEventListener('DOMContentLoaded', async () => {
+            // Initialize Supabase client
+            supabaseClient = window.supabase.createClient(SUPABASE_URL, SUPABASE_ANON_KEY);
             
-            geocoder.geocode({ address: address }, (results, status) => {
-                if (status === 'OK' && results[0]) {
-                    const location = results[0].geometry.location;
-                    resolve({
-                        lat: location.lat(),
-                        lng: location.lng()
+            // Check if user is authenticated
+            const { data: { session } } = await supabaseClient.auth.getSession();
+            
+            if (!session) {
+                // Not authenticated, redirect to login
+                alert('Please login to access the admin dashboard');
+                window.location.href = 'admin-login.html';
+                return;
+            }
+            
+            // User is authenticated
+            console.log('Admin authenticated:', session.user.email);
+            
+            // Add logout button to navigation
+            addLogoutButton();
+            
+            // Initialize the dashboard
+            initializeDashboard();
+        });
+        
+        // Add logout button to navigation
+        function addLogoutButton() {
+            const navWrapper = document.querySelector('.nav-wrapper');
+            if (navWrapper && !document.getElementById('logoutBtn')) {
+                const logoutBtn = document.createElement('button');
+                logoutBtn.id = 'logoutBtn';
+                logoutBtn.textContent = 'Logout';
+                logoutBtn.style.cssText = `
+                    background: #ef4444;
+                    color: white;
+                    border: none;
+                    padding: 0.5rem 1rem;
+                    border-radius: 8px;
+                    cursor: pointer;
+                    font-weight: 500;
+                    margin-left: 1rem;
+                `;
+                logoutBtn.onclick = async () => {
+                    if (confirm('Are you sure you want to logout?')) {
+                        await supabaseClient.auth.signOut();
+                        localStorage.removeItem('adminAuthenticated');
+                        window.location.href = 'admin-login.html';
+                    }
+                };
+                navWrapper.appendChild(logoutBtn);
+            }
+        }
+        
+        // Initialize dashboard
+        function initializeDashboard() {
+            loadCustomSpecialties();
+            loadDoctors();
+            setupEventListeners();
+            setMinDate();
+            
+            // Setup edit form event listener
+            const editForm = document.getElementById('editDoctorForm');
+            if (editForm) {
+                editForm.addEventListener('submit', handleEditFormSubmit);
+            }
+        }
+        
+        // ============================================
+        // CORE FUNCTIONS
+        // ============================================
+        
+        // Geocode address using Google Maps
+        async function geocodeAddress(address) {
+            return new Promise((resolve) => {
+                try {
+                    const geocoder = new google.maps.Geocoder();
+                    
+                    geocoder.geocode({ address: address }, (results, status) => {
+                        if (status === 'OK' && results[0]) {
+                            const location = results[0].geometry.location;
+                            resolve({
+                                lat: location.lat(),
+                                lng: location.lng()
+                            });
+                        } else {
+                            console.warn('Geocoding failed for address:', address, 'Status:', status);
+                            resolve(null);
+                        }
                     });
-                } else {
-                    console.warn('Geocoding failed for address:', address, 'Status:', status);
-                    resolve(null); // Return null instead of throwing error
+                } catch (error) {
+                    console.warn('Geocoder error:', error);
+                    resolve(null);
                 }
             });
-        } catch (error) {
-            console.warn('Geocoder error:', error);
-            resolve(null); // Return null on any error
         }
-    });
-}
-
-// Quick test function to verify the backend endpoint
-async function quickTestPractice() {
-    const testData = {
-        name: "Quick Test " + Date.now(),
-        specialty: "primary-care",
-        practice: "TEST PRACTICE FIELD",
-        phone: "(252) 555-" + Math.floor(Math.random() * 9000 + 1000),
-        address: "123 Test St",
-        city: "Morehead City",
-        zip_code: "28557"
-    };
-    
-    console.log('Testing with:', testData);
-    
-    const response = await fetch(`${API_URL}/doctors`, {
-        method: 'POST',
-        headers: {'Content-Type': 'application/json'},
-        body: JSON.stringify(testData)
-    });
-    
-    const result = await response.json();
-    console.log('Result:', result);
-    console.log('Practice saved?', result.practice === "TEST PRACTICE FIELD" ? "YES ✅" : "NO ❌");
-    
-    return result;
-}
-
-        // Initialize
-document.addEventListener('DOMContentLoaded', () => {
-    loadCustomSpecialties();  // Add this line
-    loadDoctors();
-    setupEventListeners();
-    setMinDate();
-});
+        
         // Handle custom specialty selection
-function checkCustomSpecialty() {
-    const specialtySelect = document.getElementById('newSpecialty');
-    const customSpecialtyInput = document.getElementById('customSpecialty');
-    
-    if (specialtySelect.value === 'custom') {
-        customSpecialtyInput.style.display = 'block';
-        customSpecialtyInput.required = true;
-        // Focus on the custom input
-        customSpecialtyInput.focus();
-    } else {
-        customSpecialtyInput.style.display = 'none';
-        customSpecialtyInput.required = false;
-        customSpecialtyInput.value = '';
-    }
-}
-
-// Get the actual specialty value (handles custom)
-function getSpecialtyValue() {
-    const specialtySelect = document.getElementById('newSpecialty');
-    const customSpecialtyInput = document.getElementById('customSpecialty');
-    
-    if (specialtySelect.value === 'custom') {
-        // Convert to lowercase with hyphens (like other specialties)
-        return customSpecialtyInput.value.toLowerCase().replace(/\s+/g, '-');
-    }
-    return specialtySelect.value;
-}
-
-// Store custom specialties locally
-let customSpecialties = JSON.parse(localStorage.getItem('customSpecialties') || '[]');
-
-// Add custom specialty to all dropdowns
-function addCustomSpecialtyToDropdowns(specialty, displayName) {
-    // Add to localStorage
-    if (!customSpecialties.find(s => s.value === specialty)) {
-        customSpecialties.push({ value: specialty, display: displayName });
-        localStorage.setItem('customSpecialties', JSON.stringify(customSpecialties));
-    }
-    
-    // Add to all specialty dropdowns on the page
-    const dropdowns = ['newSpecialty', 'filterSpecialty'];
-    dropdowns.forEach(dropdownId => {
-        const select = document.getElementById(dropdownId);
-        if (select && !Array.from(select.options).find(opt => opt.value === specialty)) {
-            // Add before the "custom" option
-            const customOption = Array.from(select.options).find(opt => opt.value === 'custom');
-            const newOption = new Option(displayName, specialty);
-            select.insertBefore(newOption, customOption);
-        }
-    });
-}
-
-// Load custom specialties on page load
-function loadCustomSpecialties() {
-    customSpecialties.forEach(spec => {
-        const dropdowns = ['newSpecialty', 'filterSpecialty'];
-        dropdowns.forEach(dropdownId => {
-            const select = document.getElementById(dropdownId);
-            if (select) {
-                const customOption = Array.from(select.options).find(opt => opt.value === 'custom');
-                const newOption = new Option(spec.display, spec.value);
-                if (customOption) {
-                    select.insertBefore(newOption, customOption);
-                } else {
-                    select.appendChild(newOption);
-                }
+        function checkCustomSpecialty() {
+            const specialtySelect = document.getElementById('newSpecialty');
+            const customSpecialtyInput = document.getElementById('customSpecialty');
+            
+            if (specialtySelect.value === 'custom') {
+                customSpecialtyInput.style.display = 'block';
+                customSpecialtyInput.required = true;
+                customSpecialtyInput.focus();
+            } else {
+                customSpecialtyInput.style.display = 'none';
+                customSpecialtyInput.required = false;
+                customSpecialtyInput.value = '';
             }
-        });
-    });
-}
-
+        }
+        
+        // Get the actual specialty value
+        function getSpecialtyValue() {
+            const specialtySelect = document.getElementById('newSpecialty');
+            const customSpecialtyInput = document.getElementById('customSpecialty');
+            
+            if (specialtySelect.value === 'custom') {
+                return customSpecialtyInput.value.toLowerCase().replace(/\s+/g, '-');
+            }
+            return specialtySelect.value;
+        }
+        
+        // Add custom specialty to dropdowns
+        function addCustomSpecialtyToDropdowns(specialty, displayName) {
+            if (!customSpecialties.find(s => s.value === specialty)) {
+                customSpecialties.push({ value: specialty, display: displayName });
+                localStorage.setItem('customSpecialties', JSON.stringify(customSpecialties));
+            }
+            
+            const dropdowns = ['newSpecialty', 'filterSpecialty'];
+            dropdowns.forEach(dropdownId => {
+                const select = document.getElementById(dropdownId);
+                if (select && !Array.from(select.options).find(opt => opt.value === specialty)) {
+                    const customOption = Array.from(select.options).find(opt => opt.value === 'custom');
+                    const newOption = new Option(displayName, specialty);
+                    select.insertBefore(newOption, customOption);
+                }
+            });
+        }
+        
+        // Load custom specialties
+        function loadCustomSpecialties() {
+            customSpecialties.forEach(spec => {
+                const dropdowns = ['newSpecialty', 'filterSpecialty'];
+                dropdowns.forEach(dropdownId => {
+                    const select = document.getElementById(dropdownId);
+                    if (select) {
+                        const customOption = Array.from(select.options).find(opt => opt.value === 'custom');
+                        const newOption = new Option(spec.display, spec.value);
+                        if (customOption) {
+                            select.insertBefore(newOption, customOption);
+                        } else {
+                            select.appendChild(newOption);
+                        }
+                    }
+                });
+            });
+        }
+        
         // Set minimum date for date inputs
         function setMinDate() {
             const today = new Date().toISOString().split('T')[0];
-            document.getElementById('newNextAvailable').min = today;
+            const nextAvailableInput = document.getElementById('newNextAvailable');
+            if (nextAvailableInput) {
+                nextAvailableInput.min = today;
+            }
         }
         
         // Setup event listeners
         function setupEventListeners() {
-            // Search functionality
-            document.getElementById('searchInput').addEventListener('input', filterDoctors);
-            document.getElementById('filterSpecialty').addEventListener('change', filterDoctors);
+            const searchInput = document.getElementById('searchInput');
+            if (searchInput) {
+                searchInput.addEventListener('input', filterDoctors);
+            }
             
-            // Add doctor form
-            document.getElementById('addDoctorForm').addEventListener('submit', async (e) => {
-                e.preventDefault();
-                await addNewDoctor();
-            });
+            const filterSpecialty = document.getElementById('filterSpecialty');
+            if (filterSpecialty) {
+                filterSpecialty.addEventListener('change', filterDoctors);
+            }
+            
+            const addDoctorForm = document.getElementById('addDoctorForm');
+            if (addDoctorForm) {
+                addDoctorForm.addEventListener('submit', async (e) => {
+                    e.preventDefault();
+                    await addNewDoctor();
+                });
+            }
         }
         
-       // Switch tabs
-function switchTab(tab) {
-    currentTab = tab;
-    
-    // Update tab buttons
-    document.querySelectorAll('.tab-btn').forEach(btn => {
-        btn.classList.remove('active');
-    });
-    
-    // Find and activate the correct tab button based on the tab name
-    const tabButtons = document.querySelectorAll('.tab-btn');
-    tabButtons.forEach(btn => {
-        if ((tab === 'manage' && btn.textContent.includes('Manage Doctors')) ||
-            (tab === 'add' && btn.textContent.includes('Add New')) ||
-            (tab === 'bulk' && btn.textContent.includes('Bulk')) ||
-            (tab === 'import' && btn.textContent.includes('Import'))) {
-            btn.classList.add('active');
+        // Switch tabs
+        function switchTab(tab) {
+            currentTab = tab;
+            
+            document.querySelectorAll('.tab-btn').forEach(btn => {
+                btn.classList.remove('active');
+            });
+            
+            const tabButtons = document.querySelectorAll('.tab-btn');
+            tabButtons.forEach(btn => {
+                if ((tab === 'manage' && btn.textContent.includes('Manage Doctors')) ||
+                    (tab === 'add' && btn.textContent.includes('Add New')) ||
+                    (tab === 'bulk' && btn.textContent.includes('Bulk')) ||
+                    (tab === 'import' && btn.textContent.includes('Import'))) {
+                    btn.classList.add('active');
+                }
+            });
+            
+            document.querySelectorAll('.tab-content').forEach(content => {
+                content.classList.remove('active');
+            });
+            document.getElementById(`${tab}-tab`).classList.add('active');
+            
+            if (tab === 'bulk') {
+                loadBulkUpdateList();
+            }
         }
-    });
-    
-    // Update tab content
-    document.querySelectorAll('.tab-content').forEach(content => {
-        content.classList.remove('active');
-    });
-    document.getElementById(`${tab}-tab`).classList.add('active');
-    
-    // Load bulk update list if needed
-    if (tab === 'bulk') {
-        loadBulkUpdateList();
-    }
-}
         
         // Load all doctors
         async function loadDoctors() {
@@ -874,85 +965,47 @@ function switchTab(tab) {
             }
         }
         
-      
-function displayDoctors(doctors) {
-    const tbody = document.getElementById('doctorsTableBody');
-    
-    tbody.innerHTML = doctors.map(doctor => {
-        // Ensure practice field is displayed correctly
-        const practiceDisplay = doctor.practice || 'Not specified';
-        
-        return `
-        <tr>
-            <td class="doctor-name">${doctor.name}</td>
-            <td><span class="specialty-badge">${formatSpecialty(doctor.specialty)}</span></td>
-            <td>
-                <strong>${practiceDisplay}</strong><br>
-                <span style="font-size: 0.875rem; color: var(--text-secondary);">
-                    ${doctor.city}, NC ${doctor.zip_code}
-                </span>
-            </td>
-            <td>${doctor.phone}</td>
-            <td>
-                <input type="date" 
-                       class="date-input-small" 
-                       id="date-${doctor.id}"
-                       value="${doctor.next_available.split('T')[0]}"
-                       min="${new Date().toISOString().split('T')[0]}">
-            </td>
-            <td>
-                <button class="btn-small btn-update" onclick="updateAppointment(${doctor.id})">
-                    Update
-                </button>
-                <button class="btn-small btn-edit" onclick='editDoctor(${JSON.stringify(doctor).replace(/'/g, "&#39;")})'>
-                    Edit
-                </button>
-                <button class="btn-small btn-delete" onclick="deleteDoctor(${doctor.id}, '${doctor.name.replace(/'/g, "\\'")}')">
-                    Delete
-                </button>
-                <span id="msg-${doctor.id}" class="success-msg"></span>
-            </td>
-        </tr>
-    `;
-    }).join('');
-}
-// BACKEND CHECK - Add this function to verify what the backend is receiving
-async function testPracticeField() {
-    const testData = {
-        name: "Test Doctor",
-        specialty: "primary-care",
-        practice: "Test Practice Name",
-        phone: "(252) 555-9999",
-        address: "123 Test St",
-        city: "Morehead City",
-        zip_code: "28557"
-    };
-    
-    console.log('Testing with data:', testData);
-    
-    try {
-        const response = await fetch(`${API_URL}/doctors`, {
-            method: 'POST',
-            headers: {
-                'Content-Type': 'application/json',
-            },
-            body: JSON.stringify(testData)
-        });
-        
-        const result = await response.json();
-        console.log('Test result:', result);
-        
-        if (result.practice) {
-            console.log('✓ Practice field is being saved correctly');
-        } else {
-            console.log('✗ Practice field is NOT being saved - check backend');
+        // Display doctors
+        function displayDoctors(doctors) {
+            const tbody = document.getElementById('doctorsTableBody');
+            
+            tbody.innerHTML = doctors.map(doctor => {
+                const practiceDisplay = doctor.practice || 'Not specified';
+                
+                return `
+                <tr>
+                    <td class="doctor-name">${doctor.name}</td>
+                    <td><span class="specialty-badge">${formatSpecialty(doctor.specialty)}</span></td>
+                    <td>
+                        <strong>${practiceDisplay}</strong><br>
+                        <span style="font-size: 0.875rem; color: var(--text-secondary);">
+                            ${doctor.city}, NC ${doctor.zip_code}
+                        </span>
+                    </td>
+                    <td>${doctor.phone}</td>
+                    <td>
+                        <input type="date" 
+                               class="date-input-small" 
+                               id="date-${doctor.id}"
+                               value="${doctor.next_available.split('T')[0]}"
+                               min="${new Date().toISOString().split('T')[0]}">
+                    </td>
+                    <td>
+                        <button class="btn-small btn-update" onclick="updateAppointment(${doctor.id})">
+                            Update
+                        </button>
+                        <button class="btn-small btn-edit" onclick='editDoctor(${JSON.stringify(doctor).replace(/'/g, "&#39;")})'>
+                            Edit
+                        </button>
+                        <button class="btn-small btn-delete" onclick="deleteDoctor(${doctor.id}, '${doctor.name.replace(/'/g, "\\'")}')">
+                            Delete
+                        </button>
+                        <span id="msg-${doctor.id}" class="success-msg"></span>
+                    </td>
+                </tr>
+            `;
+            }).join('');
         }
-    } catch (error) {
-        console.error('Test failed:', error);
-    }
-}
-
-// You can run this in the console to test: testPracticeField()
         
         // Filter doctors
         function filterDoctors() {
@@ -999,7 +1052,6 @@ async function testPracticeField() {
                         msgSpan.textContent = '';
                     }, 3000);
                     
-                    // Update local data
                     const doctor = allDoctors.find(d => d.id === doctorId);
                     if (doctor) {
                         doctor.next_available = dateInput.value;
@@ -1013,352 +1065,213 @@ async function testPracticeField() {
                 msgSpan.style.color = 'red';
             }
         }
-        // Delete doctor function
-async function deleteDoctor(doctorId, doctorName) {
-    const confirmDelete = confirm(`Are you sure you want to delete ${doctorName}? This cannot be undone.`);
-    
-    if (!confirmDelete) return;
-    
-    try {
-        const response = await fetch(`${API_URL}/doctors/${doctorId}`, {
-            method: 'DELETE',
-            headers: {
-                'Content-Type': 'application/json',
-            }
-        });
-
-        if (response.ok) {
-            alert('Doctor deleted successfully');
-            // Remove from local array
-            allDoctors = allDoctors.filter(d => d.id !== doctorId);
-            // Refresh display
-            filterDoctors();
-            updateStats();
-        } else {
-            throw new Error('Failed to delete');
-        }
-    } catch (error) {
-        console.error('Error deleting doctor:', error);
-        alert('Error deleting doctor. Please try again.');
-    }
-}
-
-// Make deleteDoctor available globally
-window.deleteDoctor = deleteDoctor;
-
-// Edit doctor functions
-function editDoctor(doctor) {
-    // Populate the edit form
-    document.getElementById('editDoctorId').value = doctor.id;
-    document.getElementById('editName').value = doctor.name;
-    document.getElementById('editSpecialty').value = doctor.specialty;
-    document.getElementById('editPractice').value = doctor.practice || '';
-    document.getElementById('editPhone').value = doctor.phone;
-    document.getElementById('editAddress').value = doctor.address;
-    document.getElementById('editCity').value = doctor.city;
-    document.getElementById('editState').value = 'NC';
-    document.getElementById('editZip').value = doctor.zip_code;
-    document.getElementById('editNextAvailable').value = doctor.next_available.split('T')[0];
-    
-    // Show the modal
-    document.getElementById('editModal').style.display = 'flex';
-}
-
-function closeEditModal() {
-    document.getElementById('editModal').style.display = 'none';
-}
-
-// Setup edit form submission
-document.getElementById('editDoctorForm').addEventListener('submit', async (e) => {
-    e.preventDefault();
-    
-    const doctorId = document.getElementById('editDoctorId').value;
-    const formData = {
-        name: document.getElementById('editName').value,
-        specialty: document.getElementById('editSpecialty').value,
-        practice: document.getElementById('editPractice').value,
-        phone: document.getElementById('editPhone').value,
-        address: document.getElementById('editAddress').value,
-        city: document.getElementById('editCity').value,
-        zip_code: document.getElementById('editZip').value
-    };
-    
-    // Build full address for geocoding
-    const fullAddress = `${formData.address}, ${formData.city}, ${document.getElementById('editState').value} ${formData.zip_code}`;
-    
-    showLoading();
-    
-    try {
-        // Get coordinates from Google Maps
-        const coords = await geocodeAddress(fullAddress);
-        if (coords) {
-            formData.latitude = coords.lat;
-            formData.longitude = coords.lng;
-        }
         
-        // Update doctor
-        const response = await fetch(`${API_URL}/doctors/${doctorId}`, {
-            method: 'PUT',
-            headers: {
-                'Content-Type': 'application/json',
-            },
-            body: JSON.stringify(formData)
-        });
-        
-        if (response.ok) {
-            // Update appointment date if changed
-            const newDate = document.getElementById('editNextAvailable').value;
-            await fetch(`${API_URL}/appointments`, {
-                method: 'POST',
-                headers: {
-                    'Content-Type': 'application/json',
-                },
-                body: JSON.stringify({
-                    doctor_id: doctorId,
-                    next_available: newDate
-                })
-            });
+        // Delete doctor
+        async function deleteDoctor(doctorId, doctorName) {
+            const confirmDelete = confirm(`Are you sure you want to delete ${doctorName}? This cannot be undone.`);
             
-            closeEditModal();
-            await loadDoctors();
-            alert('Doctor information updated successfully!');
-        }
-    } catch (error) {
-        console.error('Error updating doctor:', error);
-        alert('Error updating doctor. Please try again.');
-    } finally {
-        hideLoading();
-    }
-});
-  // Replace your addNewDoctor function with this version
-// This handles the Google Maps error and ensures practice field is saved
-
-async function addNewDoctor() {
-    console.log('=== START ADD NEW DOCTOR ===');
-    
-    const specialtyValue = getSpecialtyValue();
-    const customSpecialtyInput = document.getElementById('customSpecialty');
-    
-    // If custom, save it for future use
-    if (document.getElementById('newSpecialty').value === 'custom' && customSpecialtyInput.value) {
-        const displayName = customSpecialtyInput.value
-            .split('-')
-            .map(word => word.charAt(0).toUpperCase() + word.slice(1))
-            .join(' ');
-        addCustomSpecialtyToDropdowns(specialtyValue, displayName);
-    }
-    
-    // Get all form values INCLUDING practice
-    const practiceValue = document.getElementById('newPractice').value;
-    
-    const formData = {
-        name: document.getElementById('newName').value,
-        specialty: specialtyValue,
-        practice: practiceValue,  // EXPLICITLY include practice
-        phone: document.getElementById('newPhone').value,
-        address: document.getElementById('newAddress').value,
-        city: document.getElementById('newCity').value,
-        zip_code: document.getElementById('newZip').value
-    };
-    
-    console.log('FormData being sent:', JSON.stringify(formData, null, 2));
-    
-    // Check for manual lat/lng inputs
-    const manualLat = document.getElementById('newLatitude').value;
-    const manualLng = document.getElementById('newLongitude').value;
-    
-    showLoading();
-    
-    try {
-        // Handle coordinates - but don't let geocoding errors stop us
-        if (manualLat && manualLng) {
-            formData.latitude = parseFloat(manualLat);
-            formData.longitude = parseFloat(manualLng);
-            console.log('Using manual coordinates');
-        } else {
-            // Try to geocode but catch any errors
+            if (!confirmDelete) return;
+            
             try {
-                const fullAddress = `${formData.address}, ${formData.city}, NC ${formData.zip_code}`;
+                const response = await fetch(`${API_URL}/doctors/${doctorId}`, {
+                    method: 'DELETE',
+                    headers: {
+                        'Content-Type': 'application/json',
+                    }
+                });
+
+                if (response.ok) {
+                    alert('Doctor deleted successfully');
+                    allDoctors = allDoctors.filter(d => d.id !== doctorId);
+                    filterDoctors();
+                    updateStats();
+                } else {
+                    throw new Error('Failed to delete');
+                }
+            } catch (error) {
+                console.error('Error deleting doctor:', error);
+                alert('Error deleting doctor. Please try again.');
+            }
+        }
+        
+        // Make deleteDoctor available globally
+        window.deleteDoctor = deleteDoctor;
+        
+        // Edit doctor
+        function editDoctor(doctor) {
+            document.getElementById('editDoctorId').value = doctor.id;
+            document.getElementById('editName').value = doctor.name;
+            document.getElementById('editSpecialty').value = doctor.specialty;
+            document.getElementById('editPractice').value = doctor.practice || '';
+            document.getElementById('editPhone').value = doctor.phone;
+            document.getElementById('editAddress').value = doctor.address;
+            document.getElementById('editCity').value = doctor.city;
+            document.getElementById('editState').value = 'NC';
+            document.getElementById('editZip').value = doctor.zip_code;
+            document.getElementById('editNextAvailable').value = doctor.next_available.split('T')[0];
+            
+            document.getElementById('editModal').style.display = 'flex';
+        }
+        
+        window.editDoctor = editDoctor;
+        
+        // Close edit modal
+        function closeEditModal() {
+            document.getElementById('editModal').style.display = 'none';
+        }
+        
+        window.closeEditModal = closeEditModal;
+        
+        // Handle edit form submission
+        async function handleEditFormSubmit(e) {
+            e.preventDefault();
+            
+            const doctorId = document.getElementById('editDoctorId').value;
+            const formData = {
+                name: document.getElementById('editName').value,
+                specialty: document.getElementById('editSpecialty').value,
+                practice: document.getElementById('editPractice').value,
+                phone: document.getElementById('editPhone').value,
+                address: document.getElementById('editAddress').value,
+                city: document.getElementById('editCity').value,
+                zip_code: document.getElementById('editZip').value
+            };
+            
+            const fullAddress = `${formData.address}, ${formData.city}, ${document.getElementById('editState').value} ${formData.zip_code}`;
+            
+            showLoading();
+            
+            try {
                 const coords = await geocodeAddress(fullAddress);
                 if (coords) {
                     formData.latitude = coords.lat;
                     formData.longitude = coords.lng;
-                    console.log('Geocoding successful');
                 }
-            } catch (geoError) {
-                console.warn('Geocoding failed, continuing without coordinates:', geoError);
-                // Continue without coordinates - don't fail the whole operation
-            }
-        }
-        
-        // IMPORTANT: Log exactly what we're sending
-        const requestBody = JSON.stringify(formData);
-        console.log('Final request body with practice field:', requestBody);
-        
-        // Add doctor to database
-        const doctorResponse = await fetch(`${API_URL}/doctors`, {
-            method: 'POST',
-            headers: {
-                'Content-Type': 'application/json',
-            },
-            body: requestBody
-        });
-        
-        const responseText = await doctorResponse.text();
-        console.log('Raw server response:', responseText);
-        
-        if (!doctorResponse.ok) {
-            throw new Error('Failed to add doctor: ' + responseText);
-        }
-        
-        const newDoctor = JSON.parse(responseText);
-        console.log('New doctor created:', newDoctor);
-        console.log('Practice field in response:', newDoctor.practice || 'NOT FOUND IN RESPONSE');
-        
-        // Add initial appointment
-        const appointmentResponse = await fetch(`${API_URL}/appointments`, {
-            method: 'POST',
-            headers: {
-                'Content-Type': 'application/json',
-            },
-            body: JSON.stringify({
-                doctor_id: newDoctor.id,
-                next_available: document.getElementById('newNextAvailable').value
-            })
-        });
-        
-        if (appointmentResponse.ok) {
-            document.getElementById('addDoctorMessage').textContent = '✓ Doctor added successfully!';
-            document.getElementById('addDoctorForm').reset();
-            document.getElementById('customSpecialty').style.display = 'none';
-            
-            await loadDoctors();
-            
-            setTimeout(() => {
-                document.getElementById('addDoctorMessage').textContent = '';
-                // Switch back to manage tab
-                switchTab('manage');
-            }, 2000);
-        }
-    } catch (error) {
-        console.error('Error in addNewDoctor:', error);
-        alert('Error adding doctor. Check console for details.');
-    } finally {
-        hideLoading();
-    }
-    
-    console.log('=== END ADD NEW DOCTOR ===');
-}
-
-// ============================================
-// ADDITIONAL TEST FUNCTION
-// Run this in console to test the backend directly
-// ============================================
-
-async function testBackendDirectly() {
-    console.log('Testing backend directly with practice field...');
-    
-    const testData = {
-        name: "Test Doctor " + Date.now(),
-        specialty: "primary-care",
-        practice: "Test Practice Name " + Date.now(),
-        phone: "(252) 555-" + Math.floor(Math.random() * 9000 + 1000),
-        address: "123 Test Street",
-        city: "Morehead City",
-        zip_code: "28557"
-    };
-    
-    console.log('Sending test data:', testData);
-    
-    try {
-        const response = await fetch(`${API_URL}/doctors`, {
-            method: 'POST',
-            headers: {
-                'Content-Type': 'application/json',
-            },
-            body: JSON.stringify(testData)
-        });
-        
-        const result = await response.json();
-        console.log('Backend response:', result);
-        
-        if (result.practice === testData.practice) {
-            console.log('✅ SUCCESS: Practice field is working correctly!');
-            console.log('The issue must be in the form data collection.');
-        } else {
-            console.log('❌ PROBLEM: Practice field not saved correctly');
-            console.log('Expected:', testData.practice);
-            console.log('Got:', result.practice);
-        }
-        
-        return result;
-    } catch (error) {
-        console.error('Test failed:', error);
-    }
-}
-
-// ============================================
-// FORM FIELD INSPECTOR
-// Run this to check if the practice field has any issues
-// ============================================
-
-function inspectPracticeField() {
-    const field = document.getElementById('newPractice');
-    
-    if (!field) {
-        console.error('❌ Practice field not found with ID "newPractice"');
-        
-        // Let's search for it
-        console.log('Searching for input fields with "practice" in name or id...');
-        const allInputs = document.querySelectorAll('input');
-        allInputs.forEach(input => {
-            if (input.id.toLowerCase().includes('practice') || 
-                input.name?.toLowerCase().includes('practice') ||
-                input.placeholder?.toLowerCase().includes('practice')) {
-                console.log('Found potential practice field:', {
-                    id: input.id,
-                    name: input.name,
-                    placeholder: input.placeholder,
-                    value: input.value,
-                    type: input.type
+                
+                const response = await fetch(`${API_URL}/doctors/${doctorId}`, {
+                    method: 'PUT',
+                    headers: {
+                        'Content-Type': 'application/json',
+                    },
+                    body: JSON.stringify(formData)
                 });
+                
+                if (response.ok) {
+                    const newDate = document.getElementById('editNextAvailable').value;
+                    await fetch(`${API_URL}/appointments`, {
+                        method: 'POST',
+                        headers: {
+                            'Content-Type': 'application/json',
+                        },
+                        body: JSON.stringify({
+                            doctor_id: doctorId,
+                            next_available: newDate
+                        })
+                    });
+                    
+                    closeEditModal();
+                    await loadDoctors();
+                    alert('Doctor information updated successfully!');
+                }
+            } catch (error) {
+                console.error('Error updating doctor:', error);
+                alert('Error updating doctor. Please try again.');
+            } finally {
+                hideLoading();
             }
-        });
-        return;
-    }
-    
-    console.log('✅ Practice field found');
-    console.log('Field details:', {
-        id: field.id,
-        name: field.name,
-        value: field.value,
-        type: field.type,
-        required: field.required,
-        disabled: field.disabled,
-        readonly: field.readOnly,
-        placeholder: field.placeholder,
-        className: field.className,
-        parentElement: field.parentElement?.className
-    });
-    
-    // Check if there are any event listeners that might interfere
-    const events = getEventListeners ? getEventListeners(field) : 'Cannot check events';
-    console.log('Event listeners:', events);
-    
-    // Try setting a value programmatically
-    field.value = "Test Value " + Date.now();
-    console.log('Set test value to:', field.value);
-    
-    // Check if value persists
-    setTimeout(() => {
-        console.log('Value after 100ms:', field.value);
-    }, 100);
-}
-
-// Run these commands in the console after applying this code:
-// 1. inspectPracticeField()  - Check if the field exists and works
-// 2. testBackendDirectly()   - Test if backend accepts practice field
-// 3. Try adding a doctor normally and watch the console output
+        }
+        
+        // Add new doctor
+        async function addNewDoctor() {
+            const specialtyValue = getSpecialtyValue();
+            const customSpecialtyInput = document.getElementById('customSpecialty');
+            
+            if (document.getElementById('newSpecialty').value === 'custom' && customSpecialtyInput.value) {
+                const displayName = customSpecialtyInput.value
+                    .split('-')
+                    .map(word => word.charAt(0).toUpperCase() + word.slice(1))
+                    .join(' ');
+                addCustomSpecialtyToDropdowns(specialtyValue, displayName);
+            }
+            
+            const practiceValue = document.getElementById('newPractice').value;
+            
+            const formData = {
+                name: document.getElementById('newName').value,
+                specialty: specialtyValue,
+                practice: practiceValue,
+                phone: document.getElementById('newPhone').value,
+                address: document.getElementById('newAddress').value,
+                city: document.getElementById('newCity').value,
+                zip_code: document.getElementById('newZip').value
+            };
+            
+            const manualLat = document.getElementById('newLatitude').value;
+            const manualLng = document.getElementById('newLongitude').value;
+            
+            showLoading();
+            
+            try {
+                if (manualLat && manualLng) {
+                    formData.latitude = parseFloat(manualLat);
+                    formData.longitude = parseFloat(manualLng);
+                } else {
+                    try {
+                        const fullAddress = `${formData.address}, ${formData.city}, NC ${formData.zip_code}`;
+                        const coords = await geocodeAddress(fullAddress);
+                        if (coords) {
+                            formData.latitude = coords.lat;
+                            formData.longitude = coords.lng;
+                        }
+                    } catch (geoError) {
+                        console.warn('Geocoding failed, continuing without coordinates:', geoError);
+                    }
+                }
+                
+                const doctorResponse = await fetch(`${API_URL}/doctors`, {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json',
+                    },
+                    body: JSON.stringify(formData)
+                });
+                
+                if (!doctorResponse.ok) {
+                    throw new Error('Failed to add doctor');
+                }
+                
+                const newDoctor = await doctorResponse.json();
+                
+                const appointmentResponse = await fetch(`${API_URL}/appointments`, {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json',
+                    },
+                    body: JSON.stringify({
+                        doctor_id: newDoctor.id,
+                        next_available: document.getElementById('newNextAvailable').value
+                    })
+                });
+                
+                if (appointmentResponse.ok) {
+                    document.getElementById('addDoctorMessage').textContent = '✓ Doctor added successfully!';
+                    document.getElementById('addDoctorForm').reset();
+                    document.getElementById('customSpecialty').style.display = 'none';
+                    
+                    await loadDoctors();
+                    
+                    setTimeout(() => {
+                        document.getElementById('addDoctorMessage').textContent = '';
+                        switchTab('manage');
+                    }, 2000);
+                }
+            } catch (error) {
+                console.error('Error adding doctor:', error);
+                alert('Error adding doctor. Check console for details.');
+            } finally {
+                hideLoading();
+            }
+        }
         
         // Load bulk update list
         function loadBulkUpdateList() {
@@ -1383,6 +1296,8 @@ function inspectPracticeField() {
                 </div>
             `).join('');
         }
+        
+        window.loadBulkUpdateList = loadBulkUpdateList;
         
         // Save all bulk updates
         async function saveAllUpdates() {
@@ -1415,6 +1330,8 @@ function inspectPracticeField() {
             loadDoctors();
         }
         
+        window.saveAllUpdates = saveAllUpdates;
+        
         // Update statistics
         function updateStats() {
             const today = new Date();
@@ -1443,41 +1360,38 @@ function inspectPracticeField() {
         }
         
         // Format specialty
-       function formatSpecialty(specialty) {
-    const specialtyMap = {
-        'primary-care': 'Primary Care',
-        'cardiology': 'Cardiology',
-        'dermatology': 'Dermatology',
-        'endocrinology': 'Endocrinology',
-        'ent': 'ENT',
-        'nephrology': 'Nephrology',
-        'neurology': 'Neurology',
-        'obgyn': 'OB/GYN',
-        'ophthalmology': 'Ophthalmology',
-        'orthopedics': 'Orthopedics',
-        'pediatrics': 'Pediatrics',
-        'psychiatry': 'Psychiatry',
-        'pulmonology': 'Pulmonology',
-        'rheumatology': 'Rheumatology'
-    };
-    
-    // Check if it's a known specialty
-    if (specialtyMap[specialty]) {
-        return specialtyMap[specialty];
-    }
-    
-    // Check custom specialties
-    const customSpec = customSpecialties.find(s => s.value === specialty);
-    if (customSpec) {
-        return customSpec.display;
-    }
-    
-    // Format unknown specialties nicely
-    return specialty
-        .split('-')
-        .map(word => word.charAt(0).toUpperCase() + word.slice(1))
-        .join(' ');
-}
+        function formatSpecialty(specialty) {
+            const specialtyMap = {
+                'primary-care': 'Primary Care',
+                'cardiology': 'Cardiology',
+                'dermatology': 'Dermatology',
+                'endocrinology': 'Endocrinology',
+                'ent': 'ENT',
+                'nephrology': 'Nephrology',
+                'neurology': 'Neurology',
+                'obgyn': 'OB/GYN',
+                'ophthalmology': 'Ophthalmology',
+                'orthopedics': 'Orthopedics',
+                'pediatrics': 'Pediatrics',
+                'psychiatry': 'Psychiatry',
+                'pulmonology': 'Pulmonology',
+                'rheumatology': 'Rheumatology'
+            };
+            
+            if (specialtyMap[specialty]) {
+                return specialtyMap[specialty];
+            }
+            
+            const customSpec = customSpecialties.find(s => s.value === specialty);
+            if (customSpec) {
+                return customSpec.display;
+            }
+            
+            return specialty
+                .split('-')
+                .map(word => word.charAt(0).toUpperCase() + word.slice(1))
+                .join(' ');
+        }
         
         // Loading states
         function showLoading() {
@@ -1487,298 +1401,166 @@ function inspectPracticeField() {
         function hideLoading() {
             document.getElementById('loadingOverlay').style.display = 'none';
         }
+        
         // CSV Import Functions
-let csvData = [];
-
-function previewCSV() {
-    const fileInput = document.getElementById('csvFile');
-    const file = fileInput.files[0];
-    
-    if (!file) {
-        alert('Please select a CSV file');
-        return;
-    }
-    
-    const reader = new FileReader();
-    reader.onload = function(e) {
-        const text = e.target.result;
-        parseCSV(text);
-    };
-    reader.readAsText(file);
-}
-
-function parseCSV(text) {
-    // Split into lines and remove empty lines
-    const lines = text.split('\n').filter(line => line.trim());
-    
-    if (lines.length < 2) {
-        alert('CSV file appears to be empty');
-        return;
-    }
-    
-    // Get headers
-    const headers = lines[0].split(',').map(h => h.trim().toLowerCase());
-    
-    // Validate headers
-    const requiredHeaders = ['name', 'specialty', 'practice', 'phone', 'address', 'city', 'zip_code', 'next_available'];
-    const missingHeaders = requiredHeaders.filter(h => !headers.includes(h));
-    
-    if (missingHeaders.length > 0) {
-        alert(`Missing required columns: ${missingHeaders.join(', ')}`);
-        return;
-    }
-    
-    // Parse data rows
-    csvData = [];
-    for (let i = 1; i < lines.length; i++) {
-        const values = lines[i].split(',').map(v => v.trim());
-        const row = {};
-        headers.forEach((header, index) => {
-            row[header] = values[index] || '';
-        });
-        
-        // Validate specialty value
-        const validSpecialties = ['primary-care', 'cardiology', 'dermatology', 'endocrinology', 
-                                 'ent', 'nephrology', 'neurology', 'obgyn', 'ophthalmology', 
-                                 'orthopedics', 'pediatrics', 'psychiatry', 'pulmonology', 'rheumatology'];
-        
-        if (!validSpecialties.includes(row.specialty)) {
-            console.warn(`Row ${i}: Invalid specialty "${row.specialty}". Must be one of: ${validSpecialties.join(', ')}`);
-        }
-        
-        csvData.push(row);
-    }
-    
-    // Show preview
-    showPreview();
-    
-    // Enable import button
-    document.getElementById('importBtn').disabled = false;
-    document.getElementById('importMessage').textContent = `Ready to import ${csvData.length} doctors`;
-    document.getElementById('importMessage').style.color = '#0284c7';
-}
-
-function showPreview() {
-    const previewDiv = document.getElementById('csvPreview');
-    const previewHead = document.getElementById('previewHead');
-    const previewBody = document.getElementById('previewBody');
-    
-    // Show preview section
-    previewDiv.style.display = 'block';
-    
-    // Create header
-    const headers = Object.keys(csvData[0]);
-    previewHead.innerHTML = '<tr>' + headers.map(h => `<th style="padding: 0.5rem; background: #f1f5f9;">${h}</th>`).join('') + '</tr>';
-    
-    // Show first 5 rows
-    const previewData = csvData.slice(0, 5);
-    previewBody.innerHTML = previewData.map(row => 
-        '<tr>' + headers.map(h => `<td style="padding: 0.5rem; border: 1px solid #e2e8f0;">${row[h]}</td>`).join('') + '</tr>'
-    ).join('');
-}
-
-async function importCSV() {
-    if (csvData.length === 0) {
-        alert('No data to import');
-        return;
-    }
-    
-    const confirmImport = confirm(`Are you sure you want to import ${csvData.length} doctors?`);
-    if (!confirmImport) return;
-    
-    showLoading();
-    let successCount = 0;
-    let errorCount = 0;
-    const errors = [];
-    
-    for (const row of csvData) {
-        try {
-            // Add doctor
-            const doctorResponse = await fetch(`${API_URL}/doctors`, {
-                method: 'POST',
-                headers: {
-                    'Content-Type': 'application/json',
-                },
-                body: JSON.stringify({
-                    name: row.name,
-                    specialty: row.specialty,
-                    practice: row.practice,
-                    phone: row.phone,
-                    address: row.address,
-                    city: row.city,
-                    zip_code: row.zip_code
-                })
-            });
+        function previewCSV() {
+            const fileInput = document.getElementById('csvFile');
+            const file = fileInput.files[0];
             
-            if (!doctorResponse.ok) {
-                throw new Error(`Failed to add doctor: ${row.name}`);
+            if (!file) {
+                alert('Please select a CSV file');
+                return;
             }
             
-            const newDoctor = await doctorResponse.json();
+            const reader = new FileReader();
+            reader.onload = function(e) {
+                const text = e.target.result;
+                parseCSV(text);
+            };
+            reader.readAsText(file);
+        }
+        
+        window.previewCSV = previewCSV;
+        
+        function parseCSV(text) {
+            const lines = text.split('\n').filter(line => line.trim());
             
-            // Add appointment if date provided
-            if (row.next_available) {
-                await fetch(`${API_URL}/appointments`, {
-                    method: 'POST',
-                    headers: {
-                        'Content-Type': 'application/json',
-                    },
-                    body: JSON.stringify({
-                        doctor_id: newDoctor.id,
-                        next_available: row.next_available
-                    })
+            if (lines.length < 2) {
+                alert('CSV file appears to be empty');
+                return;
+            }
+            
+            const headers = lines[0].split(',').map(h => h.trim().toLowerCase());
+            
+            const requiredHeaders = ['name', 'specialty', 'practice', 'phone', 'address', 'city', 'zip_code', 'next_available'];
+            const missingHeaders = requiredHeaders.filter(h => !headers.includes(h));
+            
+            if (missingHeaders.length > 0) {
+                alert(`Missing required columns: ${missingHeaders.join(', ')}`);
+                return;
+            }
+            
+            csvData = [];
+            for (let i = 1; i < lines.length; i++) {
+                const values = lines[i].split(',').map(v => v.trim());
+                const row = {};
+                headers.forEach((header, index) => {
+                    row[header] = values[index] || '';
                 });
+                csvData.push(row);
             }
             
-            successCount++;
-        } catch (error) {
-            errorCount++;
-            errors.push(`${row.name}: ${error.message}`);
-            console.error('Error importing doctor:', error);
+            showPreview();
+            
+            document.getElementById('importBtn').disabled = false;
+            document.getElementById('importMessage').textContent = `Ready to import ${csvData.length} doctors`;
+            document.getElementById('importMessage').style.color = '#0284c7';
         }
-    }
-    
-    hideLoading();
-    
-    // Show results
-    let message = `Import complete! Successfully imported ${successCount} doctors.`;
-    if (errorCount > 0) {
-        message += ` ${errorCount} failed.`;
-        console.error('Import errors:', errors);
-    }
-    
-    document.getElementById('importMessage').textContent = message;
-    document.getElementById('importMessage').style.color = errorCount > 0 ? '#dc2626' : '#10b981';
-    
-    // Reset form
-    document.getElementById('csvFile').value = '';
-    document.getElementById('importBtn').disabled = true;
-    csvData = [];
-    
-    // Reload doctors list
-    if (successCount > 0) {
-        await loadDoctors();
-        setTimeout(() => {
-            switchTab('manage');
-        }, 2000);
-    }
-}
+        
+        function showPreview() {
+            const previewDiv = document.getElementById('csvPreview');
+            const previewHead = document.getElementById('previewHead');
+            const previewBody = document.getElementById('previewBody');
+            
+            previewDiv.style.display = 'block';
+            
+            const headers = Object.keys(csvData[0]);
+            previewHead.innerHTML = '<tr>' + headers.map(h => `<th style="padding: 0.5rem; background: #f1f5f9;">${h}</th>`).join('') + '</tr>';
+            
+            const previewData = csvData.slice(0, 5);
+            previewBody.innerHTML = previewData.map(row => 
+                '<tr>' + headers.map(h => `<td style="padding: 0.5rem; border: 1px solid #e2e8f0;">${row[h]}</td>`).join('') + '</tr>'
+            ).join('');
+        }
+        
+        async function importCSV() {
+            if (csvData.length === 0) {
+                alert('No data to import');
+                return;
+            }
+            
+            const confirmImport = confirm(`Are you sure you want to import ${csvData.length} doctors?`);
+            if (!confirmImport) return;
+            
+            showLoading();
+            let successCount = 0;
+            let errorCount = 0;
+            const errors = [];
+            
+            for (const row of csvData) {
+                try {
+                    const doctorResponse = await fetch(`${API_URL}/doctors`, {
+                        method: 'POST',
+                        headers: {
+                            'Content-Type': 'application/json',
+                        },
+                        body: JSON.stringify({
+                            name: row.name,
+                            specialty: row.specialty,
+                            practice: row.practice,
+                            phone: row.phone,
+                            address: row.address,
+                            city: row.city,
+                            zip_code: row.zip_code
+                        })
+                    });
+                    
+                    if (!doctorResponse.ok) {
+                        throw new Error(`Failed to add doctor: ${row.name}`);
+                    }
+                    
+                    const newDoctor = await doctorResponse.json();
+                    
+                    if (row.next_available) {
+                        await fetch(`${API_URL}/appointments`, {
+                            method: 'POST',
+                            headers: {
+                                'Content-Type': 'application/json',
+                            },
+                            body: JSON.stringify({
+                                doctor_id: newDoctor.id,
+                                next_available: row.next_available
+                            })
+                        });
+                    }
+                    
+                    successCount++;
+                } catch (error) {
+                    errorCount++;
+                    errors.push(`${row.name}: ${error.message}`);
+                    console.error('Error importing doctor:', error);
+                }
+            }
+            
+            hideLoading();
+            
+            let message = `Import complete! Successfully imported ${successCount} doctors.`;
+            if (errorCount > 0) {
+                message += ` ${errorCount} failed.`;
+                console.error('Import errors:', errors);
+            }
+            
+            document.getElementById('importMessage').textContent = message;
+            document.getElementById('importMessage').style.color = errorCount > 0 ? '#dc2626' : '#10b981';
+            
+            document.getElementById('csvFile').value = '';
+            document.getElementById('importBtn').disabled = true;
+            csvData = [];
+            
+            if (successCount > 0) {
+                await loadDoctors();
+                setTimeout(() => {
+                    switchTab('manage');
+                }, 2000);
+            }
+        }
+        
+        window.importCSV = importCSV;
+        
+        // Make functions globally available
+        window.switchTab = switchTab;
+        window.updateAppointment = updateAppointment;
+        window.checkCustomSpecialty = checkCustomSpecialty;
     </script>
-    <!-- Edit Doctor Modal -->
-<div id="editModal" class="modal" style="display: none;">
-    <div class="modal-content" style="max-width: 600px;">
-        <span class="modal-close" onclick="closeEditModal()">&times;</span>
-        <h2 style="margin-bottom: 1.5rem;">Edit Doctor Information</h2>
-        <form id="editDoctorForm">
-            <input type="hidden" id="editDoctorId">
-            <div class="form-grid">
-                <div class="form-group">
-                    <label class="form-label">Doctor Name *</label>
-                    <input type="text" id="editName" class="form-input" required>
-                </div>
-                <div class="form-group">
-                    <label class="form-label">Specialty *</label>
-                    <select id="editSpecialty" class="form-input" required>
-                        <option value="">Select Specialty</option>
-                        <option value="primary-care">Primary Care</option>
-                        <option value="cardiology">Cardiology</option>
-                        <option value="dermatology">Dermatology</option>
-                        <option value="endocrinology">Endocrinology</option>
-                        <option value="ent">ENT</option>
-                        <option value="nephrology">Nephrology</option>
-                        <option value="neurology">Neurology</option>
-                        <option value="obgyn">OB/GYN</option>
-                        <option value="ophthalmology">Ophthalmology</option>
-                        <option value="orthopedics">Orthopedics</option>
-                        <option value="pediatrics">Pediatrics</option>
-                        <option value="psychiatry">Psychiatry</option>
-                        <option value="pulmonology">Pulmonology</option>
-                        <option value="rheumatology">Rheumatology</option>
-                    </select>
-                </div>
-                <div class="form-group">
-                    <label class="form-label">Practice/Clinic Name *</label>
-                    <input type="text" id="editPractice" class="form-input" required>
-                </div>
-                <div class="form-group">
-                    <label class="form-label">Phone *</label>
-                    <input type="tel" id="editPhone" class="form-input" required>
-                </div>
-                <div class="form-group">
-                    <label class="form-label">Address *</label>
-                    <input type="text" id="editAddress" class="form-input" required>
-                </div>
-                <div class="form-group">
-                    <label class="form-label">City *</label>
-                    <input type="text" id="editCity" class="form-input" required>
-                </div>
-                <div class="form-group">
-                    <label class="form-label">State *</label>
-                    <input type="text" id="editState" class="form-input" value="NC" required>
-                </div>
-                <div class="form-group">
-                    <label class="form-label">Zip Code *</label>
-                    <input type="text" id="editZip" class="form-input" required>
-                </div>
-                <div class="form-group">
-                    <label class="form-label">Next Available *</label>
-                    <input type="date" id="editNextAvailable" class="form-input" required>
-                </div>
-            </div>
-            <div style="margin-top: 1.5rem; display: flex; gap: 1rem;">
-                <button type="submit" class="btn-primary">Save Changes</button>
-                <button type="button" onclick="closeEditModal()" style="padding: 0.875rem 2rem; background: #6b7280; color: white; border: none; border-radius: var(--radius); font-weight: 600; cursor: pointer;">Cancel</button>
-            </div>
-        </form>
-    </div>
-</div>
-
-<!-- Add modal styles -->
-<style>
-.modal {
-    position: fixed;
-    top: 0;
-    left: 0;
-    right: 0;
-    bottom: 0;
-    background: rgba(0, 0, 0, 0.5);
-    display: flex;
-    justify-content: center;
-    align-items: center;
-    z-index: 2000;
-}
-
-.modal-content {
-    background: white;
-    padding: 2rem;
-    border-radius: var(--radius-lg);
-    max-height: 90vh;
-    overflow-y: auto;
-    position: relative;
-}
-
-.modal-close {
-    position: absolute;
-    top: 1rem;
-    right: 1rem;
-    font-size: 1.5rem;
-    cursor: pointer;
-    color: #6b7280;
-}
-
-.modal-close:hover {
-    color: #1f2937;
-}
-
-.btn-edit {
-    background: #3b82f6;
-    color: white;
-    margin-left: 0.25rem;
-}
-
-.btn-edit:hover {
-    background: #2563eb;
-}
-</style>
 </body>
 </html>
