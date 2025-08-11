@@ -15,8 +15,67 @@ let sortMethod = 'balanced';
 document.addEventListener('DOMContentLoaded', () => {
     setupEventListeners();
     setupRadiusSlider();
+    setupDateInputs();
     loadInitialData();
 });
+
+// Setup date inputs with today as minimum
+function setupDateInputs() {
+    const today = new Date().toISOString().split('T')[0];
+    const dateFrom = document.getElementById('dateFrom');
+    const dateTo = document.getElementById('dateTo');
+    
+    if (dateFrom) {
+        dateFrom.min = today;
+        dateFrom.value = today;
+        dateFrom.addEventListener('change', () => {
+            // Update dateTo minimum when dateFrom changes
+            if (dateTo && dateFrom.value) {
+                dateTo.min = dateFrom.value;
+                if (dateTo.value && dateTo.value < dateFrom.value) {
+                    dateTo.value = dateFrom.value;
+                }
+            }
+            // Re-filter if we have results
+            if (userLocation && allPractices.length > 0) {
+                filterAndDisplay();
+            }
+        });
+    }
+    
+    if (dateTo) {
+        dateTo.min = today;
+        // Set default to 3 months from now
+        const threeMonths = new Date();
+        threeMonths.setMonth(threeMonths.getMonth() + 3);
+        dateTo.value = threeMonths.toISOString().split('T')[0];
+        
+        dateTo.addEventListener('change', () => {
+            // Re-filter if we have results
+            if (userLocation && allPractices.length > 0) {
+                filterAndDisplay();
+            }
+        });
+    }
+}
+
+// Clear date filter
+function clearDateFilter() {
+    const today = new Date().toISOString().split('T')[0];
+    const dateFrom = document.getElementById('dateFrom');
+    const dateTo = document.getElementById('dateTo');
+    
+    if (dateFrom) dateFrom.value = today;
+    if (dateTo) {
+        const threeMonths = new Date();
+        threeMonths.setMonth(threeMonths.getMonth() + 3);
+        dateTo.value = threeMonths.toISOString().split('T')[0];
+    }
+    
+    if (userLocation && allPractices.length > 0) {
+        filterAndDisplay();
+    }
+}
 
 // Setup event listeners
 function setupEventListeners() {
@@ -250,6 +309,12 @@ function filterAndDisplay() {
     showLoading();
     
     setTimeout(() => {
+        // Get date filter values
+        const dateFrom = document.getElementById('dateFrom')?.value;
+        const dateTo = document.getElementById('dateTo')?.value;
+        const fromDate = dateFrom ? new Date(dateFrom) : null;
+        const toDate = dateTo ? new Date(dateTo) : null;
+        
         // Calculate distances for all practices
         const practicesWithDistance = allPractices.map(practice => {
             if (!practice.latitude || !practice.longitude) {
@@ -266,12 +331,29 @@ function filterAndDisplay() {
                 practice.longitude
             );
             
-            // Calculate earliest availability across all specialties
+            // Filter specialties by date range if specified
+            let filteredSpecialties = practice.specialties;
+            if (fromDate || toDate) {
+                filteredSpecialties = practice.specialties.map(specialty => {
+                    if (!specialty.next_available) return specialty;
+                    
+                    const availDate = new Date(specialty.next_available);
+                    if (fromDate && availDate < fromDate) {
+                        return { ...specialty, next_available: null, filtered_out: true };
+                    }
+                    if (toDate && availDate > toDate) {
+                        return { ...specialty, next_available: null, filtered_out: true };
+                    }
+                    return specialty;
+                });
+            }
+            
+            // Calculate earliest availability across filtered specialties
             let earliestDate = null;
             let earliestSpecialty = null;
             
-            practice.specialties.forEach(specialty => {
-                if (specialty.next_available) {
+            filteredSpecialties.forEach(specialty => {
+                if (specialty.next_available && !specialty.filtered_out) {
                     const date = new Date(specialty.next_available);
                     if (!earliestDate || date < earliestDate) {
                         earliestDate = date;
@@ -282,6 +364,7 @@ function filterAndDisplay() {
             
             return {
                 ...practice,
+                specialties: filteredSpecialties,
                 distance: distance,
                 earliestDate: earliestDate,
                 earliestSpecialty: earliestSpecialty
@@ -294,7 +377,14 @@ function filterAndDisplay() {
         // Filter by specialty if selected
         if (selectedSpecialty) {
             filteredPractices = filteredPractices.filter(practice => 
-                practice.specialties.some(s => s.code === selectedSpecialty)
+                practice.specialties.some(s => s.code === selectedSpecialty && !s.filtered_out)
+            );
+        }
+        
+        // Filter out practices with no available appointments in date range
+        if (dateFrom || dateTo) {
+            filteredPractices = filteredPractices.filter(practice => 
+                practice.specialties.some(s => s.next_available && !s.filtered_out)
             );
         }
         
@@ -588,3 +678,4 @@ function hideError() {
 // Make functions available globally
 window.callPractice = callPractice;
 window.handleSpecialtyFilter = handleSpecialtyFilter;
+window.clearDateFilter = clearDateFilter;

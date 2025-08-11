@@ -402,13 +402,148 @@ function displayDoctors() {
                 <div style="font-size: 0.875rem; color: var(--text-secondary);">
                     Specialties: ${specialties.join(', ') || 'None'}
                 </div>
-                <button class="btn-small btn-delete" style="margin-top: 0.5rem;" 
-                        onclick="deleteDoctor(${doctor.id}, '${doctor.name.replace(/'/g, "\\'")}')">
-                    Delete
-                </button>
+                <div style="margin-top: 0.5rem;">
+                    <button class="btn-small btn-edit" onclick="editDoctor(${doctor.id})">
+                        Edit
+                    </button>
+                    <button class="btn-small btn-delete" style="margin-left: 0.25rem;" 
+                            onclick="deleteDoctor(${doctor.id}, '${doctor.name.replace(/'/g, "\\'")}')">
+                        Delete
+                    </button>
+                </div>
             </div>
         `;
     }).join('');
+}
+
+// Add edit doctor functionality
+function editDoctor(doctorId) {
+    const doctor = allDoctors.find(d => d.id === doctorId);
+    if (!doctor) return;
+    
+    // Create edit modal HTML
+    const modalHtml = `
+        <div id="editDoctorModal" class="modal" style="display: flex;">
+            <div class="modal-content">
+                <span class="modal-close" onclick="closeEditDoctorModal()">&times;</span>
+                <h2 style="margin-bottom: 1.5rem;">Edit Doctor</h2>
+                <form id="editDoctorForm" onsubmit="handleEditDoctor(event, ${doctorId})">
+                    <div class="form-grid">
+                        <div class="form-group">
+                            <label class="form-label">Doctor Name *</label>
+                            <input type="text" id="editDoctorName" class="form-input" value="${doctor.name}" required>
+                        </div>
+                        <div class="form-group">
+                            <label class="form-label">Title *</label>
+                            <select id="editDoctorTitle" class="form-input">
+                                <option value="MD" ${doctor.title === 'MD' ? 'selected' : ''}>MD</option>
+                                <option value="DO" ${doctor.title === 'DO' ? 'selected' : ''}>DO</option>
+                                <option value="PA" ${doctor.title === 'PA' ? 'selected' : ''}>PA</option>
+                                <option value="NP" ${doctor.title === 'NP' ? 'selected' : ''}>NP</option>
+                            </select>
+                        </div>
+                    </div>
+                    
+                    <div class="form-group full-width" style="margin-top: 1rem;">
+                        <label class="form-label">Practice Affiliations</label>
+                        <div class="checkbox-group" id="editPracticeCheckboxes">
+                            ${allPractices.map(practice => {
+                                const isChecked = doctor.doctor_practices?.some(dp => dp.practice_id === practice.id);
+                                return `
+                                    <div class="checkbox-item">
+                                        <input type="checkbox" 
+                                               id="edit-practice-${practice.id}" 
+                                               value="${practice.id}"
+                                               ${isChecked ? 'checked' : ''}>
+                                        <label for="edit-practice-${practice.id}">${practice.name}</label>
+                                    </div>
+                                `;
+                            }).join('')}
+                        </div>
+                    </div>
+                    
+                    <div class="form-group full-width">
+                        <label class="form-label">Specialties</label>
+                        <div class="checkbox-group" id="editDoctorSpecialtiesCheckboxes">
+                            ${allSpecialties.map(specialty => {
+                                const isChecked = doctor.doctor_specialties?.some(ds => ds.specialties?.code === specialty.code);
+                                return `
+                                    <div class="checkbox-item">
+                                        <input type="checkbox" 
+                                               id="edit-doctor-specialty-${specialty.code}" 
+                                               value="${specialty.code}"
+                                               ${isChecked ? 'checked' : ''}>
+                                        <label for="edit-doctor-specialty-${specialty.code}">${specialty.name}</label>
+                                    </div>
+                                `;
+                            }).join('')}
+                        </div>
+                    </div>
+                    
+                    <div style="margin-top: 1.5rem; display: flex; gap: 1rem;">
+                        <button type="submit" class="btn-primary">Save Changes</button>
+                        <button type="button" onclick="closeEditDoctorModal()" style="padding: 0.875rem 2rem; background: #6b7280; color: white; border: none; border-radius: var(--radius); font-weight: 600; cursor: pointer;">Cancel</button>
+                    </div>
+                </form>
+            </div>
+        </div>
+    `;
+    
+    // Add modal to page
+    const modalContainer = document.createElement('div');
+    modalContainer.innerHTML = modalHtml;
+    document.body.appendChild(modalContainer.firstElementChild);
+}
+
+// Handle edit doctor form submission
+async function handleEditDoctor(e, doctorId) {
+    e.preventDefault();
+    showLoading();
+    
+    try {
+        // Get checked practices
+        const checkedPractices = Array.from(document.querySelectorAll('#editPracticeCheckboxes input[type="checkbox"]:checked'))
+            .map(cb => parseInt(cb.value));
+        
+        // Get checked specialties
+        const checkedSpecialties = Array.from(document.querySelectorAll('#editDoctorSpecialtiesCheckboxes input[type="checkbox"]:checked'))
+            .map(cb => cb.value);
+        
+        const formData = {
+            name: document.getElementById('editDoctorName').value,
+            title: document.getElementById('editDoctorTitle').value,
+            practice_ids: checkedPractices,
+            specialties: checkedSpecialties
+        };
+        
+        const response = await fetch(`${API_URL}/doctors/${doctorId}`, {
+            method: 'PUT',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify(formData)
+        });
+        
+        if (!response.ok) throw new Error('Failed to update doctor');
+        
+        closeEditDoctorModal();
+        await loadAllData();
+        displayDoctors();
+        updateStats();
+        alert('Doctor updated successfully!');
+        
+    } catch (error) {
+        console.error('Error updating doctor:', error);
+        alert('Error updating doctor. Please try again.');
+    } finally {
+        hideLoading();
+    }
+}
+
+// Close edit doctor modal
+function closeEditDoctorModal() {
+    const modal = document.getElementById('editDoctorModal');
+    if (modal) {
+        modal.remove();
+    }
 }
 
 async function handleAddDoctor(e) {
@@ -743,6 +878,9 @@ function hideLoading() {
 window.switchTab = switchTab;
 window.editPractice = editPractice;
 window.deletePractice = deletePractice;
+window.editDoctor = editDoctor;
+window.handleEditDoctor = handleEditDoctor;
+window.closeEditDoctorModal = closeEditDoctorModal;
 window.deleteDoctor = deleteDoctor;
 window.managePracticeAppointments = managePracticeAppointments;
 window.loadPracticeAppointments = loadPracticeAppointments;
