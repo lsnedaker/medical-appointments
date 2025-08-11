@@ -874,16 +874,400 @@ function hideLoading() {
     document.getElementById('loadingOverlay').style.display = 'none';
 }
 
-// Make functions globally available
-window.switchTab = switchTab;
-window.editPractice = editPractice;
-window.deletePractice = deletePractice;
-window.editDoctor = editDoctor;
-window.handleEditDoctor = handleEditDoctor;
-window.closeEditDoctorModal = closeEditDoctorModal;
-window.deleteDoctor = deleteDoctor;
-window.managePracticeAppointments = managePracticeAppointments;
-window.loadPracticeAppointments = loadPracticeAppointments;
-window.updateAppointment = updateAppointment;
-window.saveAllAppointments = saveAllAppointments;
-window.closeEditModal = closeEditModal;
+// ============================================
+// BULK UPLOAD FUNCTIONALITY
+// ============================================
+
+let practicesCSVData = [];
+let doctorsCSVData = [];
+
+// Download practices template
+function downloadPracticesTemplate() {
+    const csvContent = `name,address,city,state,zip_code,phone,specialties,website,accepts_new_patients
+"Coastal Medical Group","123 Main St","Morehead City","NC","28557","(252) 555-0100","primary-care,cardiology,neurology","https://coastalmedical.com","true"
+"Eastern Carolina Health","456 Oak Ave","New Bern","NC","28560","(252) 555-0200","primary-care,orthopedics","","true"
+"Crystal Coast Specialists","789 Beach Rd","Beaufort","NC","28516","(252) 555-0300","cardiology,pulmonology","https://ccspecialists.com","false"`;
+    
+    downloadCSV(csvContent, 'practices_template.csv');
+}
+
+// Download doctors template
+function downloadDoctorsTemplate() {
+    const csvContent = `name,title,practices,specialties
+"Dr. Sarah Johnson","MD","Coastal Medical Group,Crystal Coast Specialists","primary-care,neurology"
+"Dr. Michael Chen","MD","Coastal Medical Group","cardiology"
+"Dr. Emily Williams","DO","Eastern Carolina Health","primary-care"
+"Dr. Robert Davis","MD","Eastern Carolina Health","orthopedics"
+"Dr. Jennifer Martinez","MD","Crystal Coast Specialists","cardiology,pulmonology"`;
+    
+    downloadCSV(csvContent, 'doctors_template.csv');
+}
+
+// Helper function to download CSV
+function downloadCSV(content, filename) {
+    const blob = new Blob([content], { type: 'text/csv;charset=utf-8;' });
+    const link = document.createElement('a');
+    const url = URL.createObjectURL(blob);
+    link.setAttribute('href', url);
+    link.setAttribute('download', filename);
+    link.style.visibility = 'hidden';
+    document.body.appendChild(link);
+    link.click();
+    document.body.removeChild(link);
+}
+
+// Parse CSV content
+function parseCSV(text) {
+    const lines = text.split('\n').filter(line => line.trim());
+    if (lines.length < 2) return [];
+    
+    // Parse headers
+    const headers = parseCSVLine(lines[0]);
+    
+    // Parse data rows
+    const data = [];
+    for (let i = 1; i < lines.length; i++) {
+        const values = parseCSVLine(lines[i]);
+        if (values.length === headers.length) {
+            const row = {};
+            headers.forEach((header, index) => {
+                row[header.toLowerCase().trim()] = values[index].trim();
+            });
+            data.push(row);
+        }
+    }
+    
+    return data;
+}
+
+// Parse a single CSV line (handles quoted values with commas)
+function parseCSVLine(line) {
+    const result = [];
+    let current = '';
+    let inQuotes = false;
+    
+    for (let i = 0; i < line.length; i++) {
+        const char = line[i];
+        
+        if (char === '"') {
+            inQuotes = !inQuotes;
+        } else if (char === ',' && !inQuotes) {
+            result.push(current.trim());
+            current = '';
+        } else {
+            current += char;
+        }
+    }
+    
+    result.push(current.trim());
+    return result;
+}
+
+// Preview practices CSV
+function previewPracticesCSV() {
+    const fileInput = document.getElementById('practicesCsvFile');
+    const file = fileInput.files[0];
+    
+    if (!file) {
+        alert('Please select a CSV file');
+        return;
+    }
+    
+    const reader = new FileReader();
+    reader.onload = function(e) {
+        const text = e.target.result;
+        practicesCSVData = parseCSV(text);
+        
+        if (practicesCSVData.length === 0) {
+            alert('No valid data found in CSV');
+            return;
+        }
+        
+        // Validate required columns
+        const required = ['name', 'address', 'city', 'state', 'zip_code', 'phone', 'specialties'];
+        const headers = Object.keys(practicesCSVData[0]);
+        const missing = required.filter(col => !headers.includes(col));
+        
+        if (missing.length > 0) {
+            alert(`Missing required columns: ${missing.join(', ')}`);
+            return;
+        }
+        
+        displayCSVPreview(practicesCSVData.slice(0, 5));
+        document.getElementById('uploadPracticesBtn').disabled = false;
+        document.getElementById('practicesUploadMessage').textContent = `Ready to upload ${practicesCSVData.length} practices`;
+        document.getElementById('practicesUploadMessage').style.color = '#0284c7';
+    };
+    reader.readAsText(file);
+}
+
+// Preview doctors CSV
+function previewDoctorsCSV() {
+    const fileInput = document.getElementById('doctorsCsvFile');
+    const file = fileInput.files[0];
+    
+    if (!file) {
+        alert('Please select a CSV file');
+        return;
+    }
+    
+    const reader = new FileReader();
+    reader.onload = function(e) {
+        const text = e.target.result;
+        doctorsCSVData = parseCSV(text);
+        
+        if (doctorsCSVData.length === 0) {
+            alert('No valid data found in CSV');
+            return;
+        }
+        
+        // Validate required columns
+        const required = ['name', 'title', 'practices', 'specialties'];
+        const headers = Object.keys(doctorsCSVData[0]);
+        const missing = required.filter(col => !headers.includes(col));
+        
+        if (missing.length > 0) {
+            alert(`Missing required columns: ${missing.join(', ')}`);
+            return;
+        }
+        
+        displayCSVPreview(doctorsCSVData.slice(0, 5));
+        document.getElementById('uploadDoctorsBtn').disabled = false;
+        document.getElementById('doctorsUploadMessage').textContent = `Ready to upload ${doctorsCSVData.length} doctors`;
+        document.getElementById('doctorsUploadMessage').style.color = '#0284c7';
+    };
+    reader.readAsText(file);
+}
+
+// Display CSV preview
+function displayCSVPreview(data) {
+    const section = document.getElementById('csvPreviewSection');
+    const thead = document.getElementById('previewHead');
+    const tbody = document.getElementById('previewBody');
+    
+    if (data.length === 0) return;
+    
+    // Create header
+    const headers = Object.keys(data[0]);
+    thead.innerHTML = `<tr>${headers.map(h => `<th style="padding: 0.5rem; background: #f1f5f9; border: 1px solid #e2e8f0;">${h}</th>`).join('')}</tr>`;
+    
+    // Create rows
+    tbody.innerHTML = data.map(row => 
+        `<tr>${headers.map(h => `<td style="padding: 0.5rem; border: 1px solid #e2e8f0;">${row[h] || ''}</td>`).join('')}</tr>`
+    ).join('');
+    
+    section.style.display = 'block';
+}
+
+// Upload practices CSV
+async function uploadPracticesCSV() {
+    if (practicesCSVData.length === 0) {
+        alert('No data to upload');
+        return;
+    }
+    
+    const confirmUpload = confirm(`Upload ${practicesCSVData.length} practices?`);
+    if (!confirmUpload) return;
+    
+    showLoading();
+    const results = [];
+    let successCount = 0;
+    let errorCount = 0;
+    
+    for (const row of practicesCSVData) {
+        try {
+            // Parse specialties (comma-separated)
+            const specialties = row.specialties ? row.specialties.split(',').map(s => s.trim()) : [];
+            
+            // Prepare practice data
+            const practiceData = {
+                name: row.name,
+                address: row.address,
+                city: row.city,
+                state: row.state || 'NC',
+                zip_code: row.zip_code,
+                phone: row.phone,
+                website: row.website || null,
+                accepts_new_patients: row.accepts_new_patients === 'true' || row.accepts_new_patients === '1',
+                specialties: specialties
+            };
+            
+            // Try to geocode address
+            const fullAddress = `${practiceData.address}, ${practiceData.city}, ${practiceData.state} ${practiceData.zip_code}`;
+            try {
+                const coords = await geocodeAddress(fullAddress);
+                if (coords) {
+                    practiceData.latitude = coords.lat;
+                    practiceData.longitude = coords.lng;
+                }
+            } catch (geoError) {
+                console.warn('Geocoding failed for:', fullAddress);
+            }
+            
+            // Upload to API
+            const response = await fetch(`${API_URL}/practices`, {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify(practiceData)
+            });
+            
+            if (response.ok) {
+                successCount++;
+                results.push(`✅ ${row.name} - Success`);
+            } else {
+                throw new Error('API request failed');
+            }
+            
+        } catch (error) {
+            errorCount++;
+            results.push(`❌ ${row.name} - Error: ${error.message}`);
+            console.error('Error uploading practice:', row.name, error);
+        }
+    }
+    
+    hideLoading();
+    
+    // Display results
+    displayUploadResults(results, successCount, errorCount);
+    
+    // Reload data if any succeeded
+    if (successCount > 0) {
+        await loadAllData();
+        updateStats();
+    }
+    
+    // Clear the file input
+    document.getElementById('practicesCsvFile').value = '';
+    document.getElementById('uploadPracticesBtn').disabled = true;
+    practicesCSVData = [];
+}
+
+// Upload doctors CSV
+async function uploadDoctorsCSV() {
+    if (doctorsCSVData.length === 0) {
+        alert('No data to upload');
+        return;
+    }
+    
+    const confirmUpload = confirm(`Upload ${doctorsCSVData.length} doctors?`);
+    if (!confirmUpload) return;
+    
+    showLoading();
+    const results = [];
+    let successCount = 0;
+    let errorCount = 0;
+    
+    for (const row of doctorsCSVData) {
+        try {
+            // Parse practices (comma-separated)
+            const practiceNames = row.practices ? row.practices.split(',').map(s => s.trim()) : [];
+            
+            // Find practice IDs from names
+            const practiceIds = [];
+            for (const practiceName of practiceNames) {
+                const practice = allPractices.find(p => 
+                    p.name.toLowerCase() === practiceName.toLowerCase()
+                );
+                if (practice) {
+                    practiceIds.push(practice.id);
+                } else {
+                    console.warn(`Practice not found: ${practiceName}`);
+                }
+            }
+            
+            if (practiceIds.length === 0) {
+                throw new Error(`No valid practices found for: ${practiceNames.join(', ')}`);
+            }
+            
+            // Parse specialties (comma-separated)
+            const specialties = row.specialties ? row.specialties.split(',').map(s => s.trim()) : [];
+            
+            // Prepare doctor data
+            const doctorData = {
+                name: row.name,
+                title: row.title || 'MD',
+                is_accepting_patients: true,
+                practice_ids: practiceIds,
+                specialties: specialties
+            };
+            
+            // Upload to API
+            const response = await fetch(`${API_URL}/doctors`, {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify(doctorData)
+            });
+            
+            if (response.ok) {
+                successCount++;
+                results.push(`✅ ${row.name} - Success`);
+            } else {
+                throw new Error('API request failed');
+            }
+            
+        } catch (error) {
+            errorCount++;
+            results.push(`❌ ${row.name} - Error: ${error.message}`);
+            console.error('Error uploading doctor:', row.name, error);
+        }
+    }
+    
+    hideLoading();
+    
+    // Display results
+    displayUploadResults(results, successCount, errorCount);
+    
+    // Reload data if any succeeded
+    if (successCount > 0) {
+        await loadAllData();
+        displayDoctors();
+        updateStats();
+    }
+    
+    // Clear the file input
+    document.getElementById('doctorsCsvFile').value = '';
+    document.getElementById('uploadDoctorsBtn').disabled = true;
+    doctorsCSVData = [];
+}
+
+// Display upload results
+function displayUploadResults(results, successCount, errorCount) {
+    const resultsSection = document.getElementById('uploadResults');
+    const resultsContent = document.getElementById('uploadResultsContent');
+    
+    let html = `
+        <div style="margin-bottom: 1rem; padding: 1rem; background: ${successCount > 0 ? '#f0fdf4' : '#fef2f2'}; border-radius: 8px;">
+            <strong>Upload Complete!</strong><br>
+            ✅ Success: ${successCount}<br>
+            ❌ Errors: ${errorCount}
+        </div>
+        <div style="font-size: 0.875rem;">
+            ${results.map(r => `<div style="padding: 0.25rem 0;">${r}</div>`).join('')}
+        </div>
+    `;
+    
+    resultsContent.innerHTML = html;
+    resultsSection.style.display = 'block';
+    
+    // Update message
+    const practicesMsg = document.getElementById('practicesUploadMessage');
+    const doctorsMsg = document.getElementById('doctorsUploadMessage');
+    
+    if (practicesMsg && practicesMsg.textContent.includes('Ready')) {
+        practicesMsg.textContent = `Upload complete: ${successCount} succeeded, ${errorCount} failed`;
+        practicesMsg.style.color = successCount > 0 ? '#10b981' : '#ef4444';
+    }
+    
+    if (doctorsMsg && doctorsMsg.textContent.includes('Ready')) {
+        doctorsMsg.textContent = `Upload complete: ${successCount} succeeded, ${errorCount} failed`;
+        doctorsMsg.style.color = successCount > 0 ? '#10b981' : '#ef4444';
+    }
+}
+
+// Make bulk upload functions globally available
+window.downloadPracticesTemplate = downloadPracticesTemplate;
+window.downloadDoctorsTemplate = downloadDoctorsTemplate;
+window.previewPracticesCSV = previewPracticesCSV;
+window.previewDoctorsCSV = previewDoctorsCSV;
+window.uploadPracticesCSV = uploadPracticesCSV;
+window.uploadDoctorsCSV = uploadDoctorsCSV;

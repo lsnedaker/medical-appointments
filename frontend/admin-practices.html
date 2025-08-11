@@ -410,7 +410,97 @@
             <div class="nav-brand">
                 <span class="brand-text">MedAppoints Admin</span>
                 <span class="brand-badge">PRACTICES</span>
+                <!-- Bulk Upload Tab -->
+        <div id="bulk-upload-tab" class="tab-content">
+            <div class="add-practice-form">
+                <h2 style="margin-bottom: 1.5rem;">Bulk Upload Practices & Doctors</h2>
+                
+                <!-- Download Templates Section -->
+                <div style="background: linear-gradient(135deg, #f0f9ff 0%, #e0f2fe 100%); border: 2px solid #0284c7; border-radius: 12px; padding: 1.5rem; margin-bottom: 2rem;">
+                    <h3 style="color: #0284c7; margin-bottom: 1rem;">Step 1: Download CSV Templates</h3>
+                    <p style="margin-bottom: 1rem;">Download these templates and fill them with your data:</p>
+                    <div style="display: flex; gap: 1rem; flex-wrap: wrap;">
+                        <button onclick="downloadPracticesTemplate()" class="btn-primary" style="background: #0284c7;">
+                            📥 Download Practices Template
+                        </button>
+                        <button onclick="downloadDoctorsTemplate()" class="btn-primary" style="background: #0284c7;">
+                            📥 Download Doctors Template
+                        </button>
+                    </div>
+                </div>
+                
+                <!-- Upload Practices Section -->
+                <div style="background: white; border: 2px solid #e9ecff; border-radius: 12px; padding: 1.5rem; margin-bottom: 2rem;">
+                    <h3 style="color: #5b5fff; margin-bottom: 1rem;">Step 2: Upload Practices CSV</h3>
+                    <div style="margin-bottom: 1rem;">
+                        <p style="font-size: 0.875rem; color: #636e72; margin-bottom: 1rem;">
+                            <strong>Required columns:</strong> name, address, city, state, zip_code, phone, specialties
+                        </p>
+                        <p style="font-size: 0.875rem; color: #636e72; margin-bottom: 1rem;">
+                            <strong>Optional columns:</strong> website, accepts_new_patients
+                        </p>
+                    </div>
+                    <input type="file" 
+                           id="practicesCsvFile" 
+                           accept=".csv"
+                           style="padding: 0.75rem; border: 2px dashed #cbd5e1; border-radius: 12px; width: 100%; cursor: pointer; margin-bottom: 1rem;">
+                    <div style="display: flex; gap: 1rem;">
+                        <button onclick="previewPracticesCSV()" class="btn-primary">
+                            👁️ Preview Data
+                        </button>
+                        <button onclick="uploadPracticesCSV()" class="btn-primary" style="background: #10b981;" id="uploadPracticesBtn" disabled>
+                            ⬆️ Upload Practices
+                        </button>
+                    </div>
+                    <div id="practicesUploadMessage" style="margin-top: 1rem; font-weight: 600;"></div>
+                </div>
+                
+                <!-- Upload Doctors Section -->
+                <div style="background: white; border: 2px solid #e9ecff; border-radius: 12px; padding: 1.5rem; margin-bottom: 2rem;">
+                    <h3 style="color: #5b5fff; margin-bottom: 1rem;">Step 3: Upload Doctors CSV</h3>
+                    <div style="margin-bottom: 1rem;">
+                        <p style="font-size: 0.875rem; color: #636e72; margin-bottom: 1rem;">
+                            <strong>Required columns:</strong> name, title, practices, specialties
+                        </p>
+                        <p style="font-size: 0.875rem; color: #dc2626; margin-bottom: 1rem;">
+                            ⚠️ Upload practices first! Doctors reference practice names.
+                        </p>
+                    </div>
+                    <input type="file" 
+                           id="doctorsCsvFile" 
+                           accept=".csv"
+                           style="padding: 0.75rem; border: 2px dashed #cbd5e1; border-radius: 12px; width: 100%; cursor: pointer; margin-bottom: 1rem;">
+                    <div style="display: flex; gap: 1rem;">
+                        <button onclick="previewDoctorsCSV()" class="btn-primary">
+                            👁️ Preview Data
+                        </button>
+                        <button onclick="uploadDoctorsCSV()" class="btn-primary" style="background: #10b981;" id="uploadDoctorsBtn" disabled>
+                            ⬆️ Upload Doctors
+                        </button>
+                    </div>
+                    <div id="doctorsUploadMessage" style="margin-top: 1rem; font-weight: 600;"></div>
+                </div>
+                
+                <!-- Preview Tables -->
+                <div id="csvPreviewSection" style="display: none;">
+                    <h3 style="margin-bottom: 1rem;">Data Preview (First 5 rows)</h3>
+                    <div style="overflow-x: auto; background: white; border-radius: 12px; padding: 1rem;">
+                        <table style="width: 100%; font-size: 0.875rem; border-collapse: collapse;">
+                            <thead id="previewHead"></thead>
+                            <tbody id="previewBody"></tbody>
+                        </table>
+                    </div>
+                </div>
+                
+                <!-- Upload Results -->
+                <div id="uploadResults" style="display: none; margin-top: 2rem;">
+                    <h3 style="margin-bottom: 1rem;">Upload Results</h3>
+                    <div id="uploadResultsContent" style="background: white; border-radius: 12px; padding: 1.5rem; max-height: 400px; overflow-y: auto;">
+                    </div>
+                </div>
             </div>
+        </div>
+    </div>
             <div>
                 <a href="index.html" style="color: var(--primary); text-decoration: none; font-weight: 500;">
                     ← Back to Main Site
@@ -450,6 +540,7 @@
             <button class="tab-btn" onclick="switchTab('add-practice')">Add Practice</button>
             <button class="tab-btn" onclick="switchTab('doctors')">Manage Doctors</button>
             <button class="tab-btn" onclick="switchTab('appointments')">Update Appointments</button>
+            <button class="tab-btn" onclick="switchTab('bulk-upload')">Bulk Upload</button>
         </div>
 
         <!-- Manage Practices Tab -->
