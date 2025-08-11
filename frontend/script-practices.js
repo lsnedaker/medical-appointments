@@ -121,8 +121,11 @@ async function loadInitialData() {
 function createSpecialtyFilters() {
     const container = document.getElementById('specialtyFilters');
     
-    // Keep the "All Specialties" pill
+    // Add click handler to the existing "All Specialties" pill
     const existingAllPill = container.querySelector('[data-specialty=""]');
+    if (existingAllPill) {
+        existingAllPill.addEventListener('click', handleSpecialtyFilter);
+    }
     
     // Add pills for each specialty
     allSpecialties.forEach(specialty => {
