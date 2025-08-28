@@ -1,4 +1,46 @@
 // server.js - Complete backend API for practice-centric system
+// Add to top of server.js
+const emailWebhook = require('./email-webhook');
+const { sendWeeklyEmails } = require('./email-service');
+
+// Add webhook route
+app.use('/api', emailWebhook);
+
+// Add manual trigger endpoint for testing
+app.post('/api/admin/send-weekly-emails', async (req, res) => {
+    try {
+        await sendWeeklyEmails();
+        res.json({ success: true, message: 'Weekly emails sent' });
+    } catch (error) {
+        console.error('Error sending emails:', error);
+        res.status(500).json({ error: 'Failed to send emails' });
+    }
+});
+
+// Add endpoint to update practice email
+app.put('/api/practices/:id/email', async (req, res) => {
+    try {
+        const { id } = req.params;
+        const { email, email_notifications_enabled } = req.body;
+        
+        const { data, error } = await supabase
+            .from('practices')
+            .update({ 
+                email,
+                email_notifications_enabled,
+                updated_at: new Date().toISOString()
+            })
+            .eq('id', id)
+            .select()
+            .single();
+        
+        if (error) throw error;
+        res.json(data);
+    } catch (error) {
+        console.error('Error updating practice email:', error);
+        res.status(500).json({ error: 'Failed to update email settings' });
+    }
+});
 const express = require('express');
 const cors = require('cors');
 const { createClient } = require('@supabase/supabase-js');
