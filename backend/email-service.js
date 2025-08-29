@@ -95,7 +95,7 @@ async function sendAvailabilityEmail(practice, specialty) {
 
     try {
         const { data, error } = await resend.emails.send({
-            from: 'appointments@yourclinic.com',
+            from: 'onboarding@resend.dev',
             to: practice.email,
             subject: `Availability Update: ${specialty.name} - ${practice.name}`,
             html: emailBody,
