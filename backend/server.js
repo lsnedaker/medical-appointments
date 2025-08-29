@@ -1,10 +1,10 @@
 // server.js - Complete backend API for practice-centric system
 // Add to top of server.js
-const emailWebhook = require('./email-webhook');
-const { sendWeeklyEmails } = require('./email-service');
+// const emailWebhook = require('./email-webhook');
+// const { sendWeeklyEmails } = require('./email-service');
 
 // Add webhook route
-app.use('/api', emailWebhook);
+// app.use('/api', emailWebhook);
 
 // Add manual trigger endpoint for testing
 app.post('/api/admin/send-weekly-emails', async (req, res) => {
