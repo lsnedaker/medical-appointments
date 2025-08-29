@@ -263,6 +263,7 @@ app.get('/api/practices/:id', async (req, res) => {
       state: practice.state,
       zip_code: practice.zip_code,
       phone: practice.phone,
+      email: practice.email,
       latitude: practice.latitude,
       longitude: practice.longitude,
       website: practice.website,

@@ -184,37 +184,38 @@ function displayPractices(practices = allPractices) {
         const specialties = practice.specialties || [];
         const doctors = practice.doctors || [];
         
-        return `
-            <tr>
-                <td class="practice-name">${practice.name}</td>
-                <td>
-                    ${practice.address}<br>
-                    <span style="font-size: 0.875rem; color: var(--text-secondary);">
-                        ${practice.city}, ${practice.state} ${practice.zip_code}
-                    </span>
-                </td>
-                <td>${practice.phone}</td>
-                <td>
-                    <div class="specialty-badges">
-                        ${specialties.map(s => 
-                            `<span class="specialty-badge">${s.name}</span>`
-                        ).join('')}
-                    </div>
-                </td>
-                <td>${doctors.length} doctors</td>
-                <td>
-                    <button class="btn-small btn-edit" onclick="editPractice(${practice.id})">
-                        Edit
-                    </button>
-                    <button class="btn-small btn-appointments" onclick="managePracticeAppointments(${practice.id})">
-                        Appointments
-                    </button>
-                    <button class="btn-small btn-delete" onclick="deletePractice(${practice.id}, '${practice.name.replace(/'/g, "\\'")}')">
-                        Delete
-                    </button>
-                </td>
-            </tr>
-        `;
+       return `
+    <tr>
+        <td class="practice-name">${practice.name}</td>
+        <td>
+            ${practice.address}<br>
+            <span style="font-size: 0.875rem; color: var(--text-secondary);">
+                ${practice.city}, ${practice.state} ${practice.zip_code}
+            </span>
+        </td>
+        <td>${practice.phone}</td>
+        <td>${practice.email || '-'}</td>
+        <td>
+            <div class="specialty-badges">
+                ${specialties.map(s => 
+                    `<span class="specialty-badge">${s.name}</span>`
+                ).join('')}
+            </div>
+        </td>
+        <td>${doctors.length} doctors</td>
+        <td>
+            <button class="btn-small btn-edit" onclick="editPractice(${practice.id})">
+                Edit
+            </button>
+            <button class="btn-small btn-appointments" onclick="managePracticeAppointments(${practice.id})">
+                Appointments
+            </button>
+            <button class="btn-small btn-delete" onclick="deletePractice(${practice.id}, '${practice.name.replace(/'/g, "\\'")}')">
+                Delete
+            </button>
+        </td>
+    </tr>
+`;
     }).join('');
 }
 
@@ -299,6 +300,7 @@ function editPractice(practiceId) {
     document.getElementById('editState').value = practice.state || 'NC';
     document.getElementById('editZip').value = practice.zip_code;
     document.getElementById('editPhone').value = practice.phone;
+    document.getElementById('editEmail').value = practice.email || '';
     document.getElementById('editWebsite').value = practice.website || '';
     document.getElementById('editAccepting').value = practice.accepts_new_patients ? 'true' : 'false';
     
