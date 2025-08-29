@@ -61,7 +61,7 @@ app.put('/api/practices/:id/email', async (req, res) => {
 });
 */
 // Simple test endpoint - add this after your other endpoints
-const Resend = require('resend');
+const { Resend } = require('resend');  // Note the curly braces - it's a named export
 
 app.post('/api/test-email-simple', async (req, res) => {
     try {
@@ -69,7 +69,7 @@ app.post('/api/test-email-simple', async (req, res) => {
         
         const result = await resend.emails.send({
             from: 'onboarding@resend.dev',  // Resend's test domain
-            to: 'your-email@example.com',    // Replace with your email
+            to: 'luke.snedaker@gmail.com',    // Replace with YOUR actual email
             subject: 'Test from Medical Appointments',
             html: '<p>If you received this, the email system is working!</p>'
         });
