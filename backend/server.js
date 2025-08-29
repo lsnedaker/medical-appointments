@@ -1,10 +1,27 @@
 // server.js - Complete backend API for practice-centric system
+
+const express = require('express');
+const cors = require('cors');
+const { createClient } = require('@supabase/supabase-js');
+require('dotenv').config();
+
+const app = express();
+const PORT = process.env.PORT || 3001;
+
+// Supabase configuration
+const supabaseUrl = process.env.SUPABASE_URL || 'https://uuxtywqbyyczpjptzmvg.supabase.co';
+const supabaseKey = process.env.SUPABASE_ANON_KEY || 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InV1eHR5d3FieXljenBqcHR6bXZnIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NTQ3NjExNTksImV4cCI6MjA3MDMzNzE1OX0.2c6mAfSSK0D7i2LtaMP11LlvGqKgvjmgTg4BI722wUo';
+const supabase = createClient(supabaseUrl, supabaseKey);
+
+// Middleware
+app.use(cors());
+app.use(express.json());
 // Add to top of server.js
-// const emailWebhook = require('./email-webhook');
-// const { sendWeeklyEmails } = require('./email-service');
+const emailWebhook = require('./email-webhook');
+const { sendWeeklyEmails } = require('./email-service');
 
 // Add webhook route
-// app.use('/api', emailWebhook);
+ app.use('/api', emailWebhook);
 
 // Add manual trigger endpoint for testing
 app.post('/api/admin/send-weekly-emails', async (req, res) => {
@@ -41,22 +58,6 @@ app.put('/api/practices/:id/email', async (req, res) => {
         res.status(500).json({ error: 'Failed to update email settings' });
     }
 });
-const express = require('express');
-const cors = require('cors');
-const { createClient } = require('@supabase/supabase-js');
-require('dotenv').config();
-
-const app = express();
-const PORT = process.env.PORT || 3001;
-
-// Supabase configuration
-const supabaseUrl = process.env.SUPABASE_URL || 'https://uuxtywqbyyczpjptzmvg.supabase.co';
-const supabaseKey = process.env.SUPABASE_ANON_KEY || 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InV1eHR5d3FieXljenBqcHR6bXZnIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NTQ3NjExNTksImV4cCI6MjA3MDMzNzE1OX0.2c6mAfSSK0D7i2LtaMP11LlvGqKgvjmgTg4BI722wUo';
-const supabase = createClient(supabaseUrl, supabaseKey);
-
-// Middleware
-app.use(cors());
-app.use(express.json());
 
 // ============================================
 // PRACTICES ENDPOINTS

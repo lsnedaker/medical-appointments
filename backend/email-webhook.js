@@ -4,10 +4,10 @@ const router = express.Router();
 const { createClient } = require('@supabase/supabase-js');
 const chrono = require('chrono-node'); // For parsing dates from natural language
 
-// const supabase = createClient(
-   //  process.env.SUPABASE_URL,
-    // process.env.SUPABASE_SERVICE_KEY
-// );
+ const supabase = createClient(
+     process.env.SUPABASE_URL,
+     process.env.SUPABASE_SERVICE_KEY
+ );
 
 // Webhook endpoint for Resend/SendGrid incoming emails
 router.post('/webhook/email-reply', async (req, res) => {
