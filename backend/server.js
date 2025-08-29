@@ -60,7 +60,26 @@ app.put('/api/practices/:id/email', async (req, res) => {
     }
 });
 */
+// Simple test endpoint - add this after your other endpoints
+const Resend = require('resend');
 
+app.post('/api/test-email-simple', async (req, res) => {
+    try {
+        const resend = new Resend(process.env.RESEND_API_KEY);
+        
+        const result = await resend.emails.send({
+            from: 'onboarding@resend.dev',  // Resend's test domain
+            to: 'your-email@example.com',    // Replace with your email
+            subject: 'Test from Medical Appointments',
+            html: '<p>If you received this, the email system is working!</p>'
+        });
+        
+        res.json({ success: true, result });
+    } catch (error) {
+        console.error('Email error:', error);
+        res.status(500).json({ error: error.message });
+    }
+});
 // ============================================
 // PRACTICES ENDPOINTS
 // ============================================
