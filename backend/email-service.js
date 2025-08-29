@@ -1,5 +1,5 @@
 // email-service.js
-const Resend = require('resend');
+const { Resend } = require('resend');
 const { createClient } = require('@supabase/supabase-js');
 const cron = require('node-cron');
 
