@@ -24,6 +24,7 @@ app.use(express.json());
 // app.use('/api', emailWebhook);
 
 // Add manual trigger endpoint for testing
+/* 
 app.post('/api/admin/send-weekly-emails', async (req, res) => {
     try {
         await sendWeeklyEmails();
@@ -58,6 +59,7 @@ app.put('/api/practices/:id/email', async (req, res) => {
         res.status(500).json({ error: 'Failed to update email settings' });
     }
 });
+*/
 
 // ============================================
 // PRACTICES ENDPOINTS
