@@ -17,14 +17,14 @@ const supabase = createClient(supabaseUrl, supabaseKey);
 app.use(cors());
 app.use(express.json());
 // Add to top of server.js
-// const emailWebhook = require('./email-webhook');
-// const { sendWeeklyEmails } = require('./email-service');
+ const emailWebhook = require('./email-webhook');
+ const { sendWeeklyEmails } = require('./email-service');
 
 // Add webhook route
-// app.use('/api', emailWebhook);
+ app.use('/api', emailWebhook);
 
 // Add manual trigger endpoint for testing
-/* 
+
 app.post('/api/admin/send-weekly-emails', async (req, res) => {
     try {
         await sendWeeklyEmails();
@@ -59,7 +59,7 @@ app.put('/api/practices/:id/email', async (req, res) => {
         res.status(500).json({ error: 'Failed to update email settings' });
     }
 });
-*/
+
 // Simple test endpoint - add this after your other endpoints
 const { Resend } = require('resend');  // Note the curly braces - it's a named export
 
@@ -288,6 +288,7 @@ app.post('/api/practices', async (req, res) => {
       state,
       zip_code,
       phone,
+      email,
       latitude,
       longitude,
       website,
@@ -306,6 +307,7 @@ app.post('/api/practices', async (req, res) => {
         state: state || 'NC',
         zip_code,
         phone,
+        email,
         latitude,
         longitude,
         website,
