@@ -243,7 +243,7 @@ async function handleAddPractice(e) {
             state: document.getElementById('practiceState').value || 'NC',
             zip_code: document.getElementById('practiceZip').value,
             phone: document.getElementById('practicePhone').value,
-           email: document.getElementById('practiceEmail').value || null,
+           email: document.getElementById('practiceEmail')?.value || null,
             website: document.getElementById('practiceWebsite').value || null,
             accepts_new_patients: document.getElementById('practiceAccepting').value === 'true',
             specialties: getCheckedSpecialties('specialtiesCheckboxes')
@@ -323,6 +323,7 @@ async function handleEditPractice(e) {
             state: document.getElementById('editState').value,
             zip_code: document.getElementById('editZip').value,
             phone: document.getElementById('editPhone').value,
+            email: document.getElementById('editEmail')?.value || null,
             website: document.getElementById('editWebsite').value || null,
             accepts_new_patients: document.getElementById('editAccepting').value === 'true',
             specialties: getCheckedSpecialties('editSpecialtiesCheckboxes')
